@@ -2,7 +2,7 @@
 Starter application for CMP301 coursework
 Updated for 2020
 
-Name:
+Name: Justin Syfrig
 
-Number:
+Number: 1904770@uad.ac.uk
 
