@@ -123,7 +123,8 @@ float4 main(InputType input) : SV_TARGET
 		}
 		
 		//Calculate specular value (zero'd if light type is OFF, or if the specular power is 0)
-		specular_new_colour += (specular_power[i].x != 0.f) * (light_type[i].x != 0) * ((light_type[i].x != 1) * attenuation + (light_type[i] == 1)) * //This first calculation either applies attenuation only on point and spot lights's specular
+		specular_new_colour += (specular_power[i].x != 0.f) * ((light_type[i].x == 3) * diff + (light_type[i].x != 3)) *	//Make sure the specular doesnt happen outside of the spotlight area
+			(light_type[i].x != 0) * ((light_type[i].x != 1) * attenuation + (light_type[i] == 1)) * //This second calculation either applies attenuation only on point and spot lights's specular
 			calculateSpecular((light_type[i].x == 1) * -direction[i].xyz + (light_type[i].x != 1) * lightVector, input.normal, input.viewVector, specular_colour[i], specular_power[i].x);
 
 		ambient_avg += (light_type[i].x != 0) * ambient[i];
