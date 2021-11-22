@@ -88,7 +88,7 @@ App1::~App1()
 	BaseApplication::~BaseApplication();
 
 	// Release the Direct3D object.
-
+	// Since I'm using smart pointers there isn't the need to delete anything here
 }
 
 
@@ -403,7 +403,8 @@ void App1::gui()
 				}
 				ImGui::Separator();
 				ImGui::Text("Shadow Settings");
-				ImGui::SliderFloat("Shadow Bias", &gui_light_shadow_bias[i], 0.f, 0.01f);
+				if (ImGui::SliderFloat("Shadow Bias", &gui_light_shadow_bias[i], 0.f, 0.01f))
+					light[i]->setShadowBias(gui_light_shadow_bias[i]);
 
 				ImGui::Separator();
 				ImGui::PopID();

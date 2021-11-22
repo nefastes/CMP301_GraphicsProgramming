@@ -3,8 +3,11 @@
 #include "BaseApplication.h"
 
 
-BaseApplication::BaseApplication()
+BaseApplication::BaseApplication() : timer(nullptr), camera(nullptr), renderer(nullptr), textureMgr(nullptr), input(nullptr),
+sWidth(0), sHeight(0), wnd(NULL), wireframeToggle(false), deltax(0), deltay(0)
 {
+	cursor.x = 0;
+	cursor.y = 0;
 }
 
 // Release resources.
