@@ -105,12 +105,13 @@ float4 main(InputType input) : SV_TARGET
 		float2 pTexCoord = getProjectiveCoords(input.lightViewPos[mapID]);
 	
 		//Check if coord is in bound and check if it is in shadow, if neither light the pixel
+		float validDepthData = (float)hasDepthData(pTexCoord);
+		float pixelInShadow = (float)!isInShadow(depthMapTexture[mapID], pTexCoord, input.lightViewPos[mapID], shadow_bias[i].x);
+
 		//Directional
-		colour += (light_type[i].x == 1) * hasDepthData(pTexCoord) * !isInShadow(depthMapTexture[mapID], pTexCoord, input.lightViewPos[mapID], shadow_bias[i].x) *
-			calculateLighting(-direction[i].xyz, input.normal, diffuse[i], lightIntensity[i].x);
+		colour += (light_type[i].x == 1) * validDepthData * pixelInShadow * calculateLighting(-direction[i].xyz, input.normal, diffuse[i], lightIntensity[i].x);
 		//Spot
-		colour += (light_type[i].x == 3) * hasDepthData(pTexCoord) * !isInShadow(depthMapTexture[mapID], pTexCoord, input.lightViewPos[mapID], shadow_bias[i].x) *
-			calculateLighting(-direction[i].xyz, input.normal, diffuse[i], diff * lightIntensity[i].x) * attenuation;
+		colour += (light_type[i].x == 3) * validDepthData * pixelInShadow * calculateLighting(-direction[i].xyz, input.normal, diffuse[i], diff * lightIntensity[i].x) * attenuation;
 		//Point
 		for (int j = 0; j < 6; ++j)
 		{
@@ -118,14 +119,25 @@ float4 main(InputType input) : SV_TARGET
 			//Otherwise hasDepthData() will be wrong, only based on the first index (mapID)
 			pTexCoord = getProjectiveCoords(input.lightViewPos[mapID + j]);
 
-			colour += (light_type[i].x == 2) * hasDepthData(pTexCoord) * !isInShadow(depthMapTexture[mapID + j], pTexCoord, input.lightViewPos[mapID + j], shadow_bias[i].x) *
-			calculateLighting(lightVector, input.normal, diffuse[i], lightIntensity[i].x) * attenuation;
+			float point_validDepthData = (float)hasDepthData(pTexCoord);
+			float point_pixelInShadow = (float)!isInShadow(depthMapTexture[mapID + j], pTexCoord, input.lightViewPos[mapID + j], shadow_bias[i].x);
+
+			colour += (light_type[i].x == 2) * point_validDepthData * point_pixelInShadow * calculateLighting(lightVector, input.normal, diffuse[i], lightIntensity[i].x) * attenuation;
+
+			//Calculate specular value (zero'd if light type is OFF, or if the specular power is 0)
+			//The following specular is only calculated for point lights
+			specular_new_colour += (specular_power[i].x != 0.f) * (light_type[i].x == 2) * point_validDepthData * point_pixelInShadow * //
+				((light_type[i].x == 3) * diff + (light_type[i].x != 3)) *									//Make sure the specular doesnt happen outside of the spotlight area
+				(light_type[i].x != 0) * ((light_type[i].x != 1) * attenuation + (light_type[i] == 1)) *	//This second calculation either applies attenuation only on point and spot lights's specular
+				calculateSpecular((light_type[i].x == 1) * -direction[i].xyz + (light_type[i].x != 1) * lightVector, input.normal, input.viewVector, specular_colour[i], specular_power[i].x);
 		}
 		
 		//Calculate specular value (zero'd if light type is OFF, or if the specular power is 0)
-		specular_new_colour += (specular_power[i].x != 0.f) * ((light_type[i].x == 3) * diff + (light_type[i].x != 3)) *	//Make sure the specular doesnt happen outside of the spotlight area
-			(light_type[i].x != 0) * ((light_type[i].x != 1) * attenuation + (light_type[i] == 1)) * //This second calculation either applies attenuation only on point and spot lights's specular
-			calculateSpecular((light_type[i].x == 1) * -direction[i].xyz + (light_type[i].x != 1) * lightVector, input.normal, input.viewVector, specular_colour[i], specular_power[i].x);
+		//The following specular is only calculated for directional and spot lights
+		specular_new_colour += (specular_power[i].x != 0.f) * (light_type[i].x != 2) * validDepthData * pixelInShadow * //
+				((light_type[i].x == 3) * diff + (light_type[i].x != 3)) *									//Make sure the specular doesnt happen outside of the spotlight area
+				(light_type[i].x != 0) * ((light_type[i].x != 1) * attenuation + (light_type[i] == 1)) *	//This second calculation either applies attenuation only on point and spot lights's specular
+				calculateSpecular((light_type[i].x == 1) * -direction[i].xyz + (light_type[i].x != 1) * lightVector, input.normal, input.viewVector, specular_colour[i], specular_power[i].x);
 
 		ambient_avg += (light_type[i].x != 0) * ambient[i];
 		ambient_count += (light_type[i].x != 0);
