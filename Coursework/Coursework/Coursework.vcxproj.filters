@@ -13,68 +13,134 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\Lighting">
+      <UniqueIdentifier>{148567dd-e9be-4ef8-98af-dc01daf71ee7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Lighting">
+      <UniqueIdentifier>{b33836fc-437d-4c97-8550-ded19ca982c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Lighting">
+      <UniqueIdentifier>{99a58f0c-ebbc-450d-be66-299809f136b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Lighting\DepthPass">
+      <UniqueIdentifier>{dcdba8f4-cded-4739-bb7c-32af7486396a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Lighting\Debug">
+      <UniqueIdentifier>{3bb3ed13-9414-45f3-a6de-edba303d84da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Lighting\Light + Shadows">
+      <UniqueIdentifier>{f6eed908-84cb-43a6-87ec-20efe307e72c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Basic">
+      <UniqueIdentifier>{7d45691f-19a7-4b54-b45a-025554d8bfb6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Basic">
+      <UniqueIdentifier>{89df576a-33df-4f81-99cc-02110ca84ad6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Tessellation">
+      <UniqueIdentifier>{38275559-4db8-41e5-8908-92647fed9fb0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Tessellation">
+      <UniqueIdentifier>{d8b6d717-6799-435b-871c-bc97debc6b0b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Tessellation">
+      <UniqueIdentifier>{af0ddd4b-1c0f-4770-93b5-9f0ca74e63b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Basic">
+      <UniqueIdentifier>{48a9edd7-510c-4c83-b37b-f1e8fbe59bf4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="App1.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DepthShader.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Lighting</Filter>
     </ClCompile>
     <ClCompile Include="LightDebugShader.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Lighting</Filter>
     </ClCompile>
     <ClCompile Include="ShadowShader.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Lighting</Filter>
     </ClCompile>
     <ClCompile Include="TextureShader.cpp">
+      <Filter>Source Files\Basic</Filter>
+    </ClCompile>
+    <ClCompile Include="App1.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PlaneTessellationShader.cpp">
+      <Filter>Source Files\Tessellation</Filter>
+    </ClCompile>
+    <ClCompile Include="TerrainMesh.cpp">
+      <Filter>Source Files\Tessellation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App1.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DepthShader.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ShadowShader.h">
+      <Filter>Header Files\Lighting</Filter>
     </ClInclude>
     <ClInclude Include="LightDebugShader.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Lighting</Filter>
     </ClInclude>
-    <ClInclude Include="ShadowShader.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="DepthShader.h">
+      <Filter>Header Files\Lighting</Filter>
     </ClInclude>
     <ClInclude Include="TextureShader.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Basic</Filter>
+    </ClInclude>
+    <ClInclude Include="PlaneTessellationShader.h">
+      <Filter>Header Files\Tessellation</Filter>
+    </ClInclude>
+    <ClInclude Include="TerrainMesh.h">
+      <Filter>Header Files\Tessellation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="shaders\depth_ps.hlsl">
-      <Filter>Resource Files</Filter>
-    </FxCompile>
     <FxCompile Include="shaders\depth_vs.hlsl">
-      <Filter>Resource Files</Filter>
+      <Filter>Resource Files\Lighting\DepthPass</Filter>
     </FxCompile>
-    <FxCompile Include="shaders\light_debug_ps.hlsl">
-      <Filter>Resource Files</Filter>
+    <FxCompile Include="shaders\depth_ps.hlsl">
+      <Filter>Resource Files\Lighting\DepthPass</Filter>
     </FxCompile>
     <FxCompile Include="shaders\light_debug_vs.hlsl">
-      <Filter>Resource Files</Filter>
+      <Filter>Resource Files\Lighting\Debug</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\light_debug_ps.hlsl">
+      <Filter>Resource Files\Lighting\Debug</Filter>
     </FxCompile>
     <FxCompile Include="shaders\shadow_ps.hlsl">
-      <Filter>Resource Files</Filter>
+      <Filter>Resource Files\Lighting\Light + Shadows</Filter>
     </FxCompile>
     <FxCompile Include="shaders\shadow_vs.hlsl">
-      <Filter>Resource Files</Filter>
-    </FxCompile>
-    <FxCompile Include="shaders\texture_ps.hlsl">
-      <Filter>Resource Files</Filter>
+      <Filter>Resource Files\Lighting\Light + Shadows</Filter>
     </FxCompile>
     <FxCompile Include="shaders\texture_vs.hlsl">
-      <Filter>Resource Files</Filter>
+      <Filter>Resource Files\Basic</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\texture_ps.hlsl">
+      <Filter>Resource Files\Basic</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_ps.hlsl">
+      <Filter>Resource Files\Tessellation</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_terrain_ds.hlsl">
+      <Filter>Resource Files\Tessellation</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_terrain_feven_hs.hlsl">
+      <Filter>Resource Files\Tessellation</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_terrain_fodd_hs.hlsl">
+      <Filter>Resource Files\Tessellation</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_terrain_integer_hs.hlsl">
+      <Filter>Resource Files\Tessellation</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_vs.hlsl">
+      <Filter>Resource Files\Tessellation</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

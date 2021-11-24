@@ -2,7 +2,7 @@
 // Lab 1 example, simple coloured triangle mesh
 #include "App1.h"
 
-App1::App1() : gui_animate_objects(false), objects_roation_angle(0.f), gui_shadow_map_display_index(0)
+App1::App1() : gui_animate_objects(false), objects_roation_angle(0.f), gui_shadow_map_display_index(0), gui_min_max_LOD(1.f, 15.f), gui_min_max_distance(50.f, 75.f)
 {
 	for (int i = 0; i < N_LIGHTS; ++i)
 	{
@@ -31,17 +31,16 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	// Call super/parent init function (required!)
 	BaseApplication::init(hinstance, hwnd, screenWidth, screenHeight, in, VSYNC, FULL_SCREEN);
 
-	// Create Mesh object and shader object
-	mesh = std::make_unique<PlaneMesh>(renderer->getDevice(), renderer->getDeviceContext());
-	model = std::make_unique<AModel>(renderer->getDevice(), "res/teapot.obj");
+	// Load textures
 	textureMgr->loadTexture(L"brick", L"res/brick1.dds");
 	textureMgr->loadTexture(L"wood", L"res/wood.png");
 
-	// initial shaders
-	textureShader = std::make_unique<TextureShader>(renderer->getDevice(), hwnd);
-	depthShader = std::make_unique<DepthShader>(renderer->getDevice(), hwnd);
-	shadowShader = std::make_unique<ShadowShader>(renderer->getDevice(), hwnd);
-	lightDebugShader = std::make_unique<LightDebugShader>(renderer->getDevice(), hwnd);
+	// Init shaders
+	texture_shader = std::make_unique<TextureShader>(renderer->getDevice(), hwnd);
+	depth_shader = std::make_unique<DepthShader>(renderer->getDevice(), hwnd);
+	shadow_shader = std::make_unique<ShadowShader>(renderer->getDevice(), hwnd);
+	light_debug_shader = std::make_unique<LightDebugShader>(renderer->getDevice(), hwnd);
+	tess_shader = std::make_unique<PlaneTessellationShader>(renderer->getDevice(), hwnd);
 
 	// Variables for defining shadow map
 	int shadowmapWidth = 1024;	//MAX: 16'384
@@ -49,7 +48,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 
 	for(int i = 0; i < N_LIGHTS * 6; ++i)
 		//Create as much shadowMaps as there are lights * 6 (for point lights)
-		shadowMap[i] = std::make_unique<ShadowMap>(renderer->getDevice(), shadowmapWidth, shadowmapHeight);
+		shadowmap[i] = std::make_unique<ShadowMap>(renderer->getDevice(), shadowmapWidth, shadowmapHeight);
 
 	for (int i = 0; i < N_LIGHTS; ++i)
 	{
@@ -74,12 +73,15 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	}
 
 	//Init orthomesh
-	orthoMesh = std::make_unique<OrthoMesh>(renderer->getDevice(), renderer->getDeviceContext(), screenWidth / 4, screenHeight / 4, screenWidth / 3, screenHeight / 3);
+	orthomesh = std::make_unique<OrthoMesh>(renderer->getDevice(), renderer->getDeviceContext(), screenWidth / 4, screenHeight / 4, screenWidth / 3, screenHeight / 3);
 
 	//Init additional objects
+	//mesh = std::make_unique<PlaneMesh>(renderer->getDevice(), renderer->getDeviceContext());
+	model = std::make_unique<AModel>(renderer->getDevice(), "res/teapot.obj");
 	cube = std::make_unique<CubeMesh>(renderer->getDevice(), renderer->getDeviceContext());
 	sphere = std::make_unique<SphereMesh>(renderer->getDevice(), renderer->getDeviceContext());
 	light_debug_sphere = std::make_unique<SphereMesh>(renderer->getDevice(), renderer->getDeviceContext());
+	terrain = std::make_unique<TerrainMesh>(renderer->getDevice(), renderer->getDeviceContext());
 }
 
 App1::~App1()
@@ -133,17 +135,30 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 
 	//floor
 	world = XMMatrixTranslation(-50.f, 0.f, -10.f);
-	mesh->sendData(renderer->getDeviceContext());
+	/*mesh->sendData(renderer->getDeviceContext());
 	if (renderDepth)
 	{
-		depthShader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
-		depthShader->render(renderer->getDeviceContext(), mesh->getIndexCount());
+		depth_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
+		depth_shader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 	}
 	else
 	{
-		shadowShader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
+		shadow_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
 			textureMgr->getTexture(L"brick"), maps, light.data(), camera);
-		shadowShader->render(renderer->getDeviceContext(), mesh->getIndexCount());
+		shadow_shader->render(renderer->getDeviceContext(), mesh->getIndexCount());
+	}*/
+
+	terrain->sendData(renderer->getDeviceContext());
+	if (renderDepth)
+	{
+		depth_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
+		depth_shader->render(renderer->getDeviceContext(), terrain->getIndexCount());
+	}
+	else
+	{
+		tess_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
+			textureMgr->getTexture(L"brick"), gui_min_max_LOD, gui_min_max_distance, maps, light.data(), camera);
+		tess_shader->render(renderer->getDeviceContext(), terrain->getIndexCount());
 	}
 
 	//teapot
@@ -154,14 +169,14 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 	model->sendData(renderer->getDeviceContext());
 	if (renderDepth)
 	{
-		depthShader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
-		depthShader->render(renderer->getDeviceContext(), model->getIndexCount());
+		depth_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
+		depth_shader->render(renderer->getDeviceContext(), model->getIndexCount());
 	}
 	else
 	{
-		shadowShader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
+		shadow_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
 			textureMgr->getTexture(L"wood"), maps, light.data(), camera);
-		shadowShader->render(renderer->getDeviceContext(), model->getIndexCount());
+		shadow_shader->render(renderer->getDeviceContext(), model->getIndexCount());
 	}
 
 	//cube
@@ -171,14 +186,14 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 	cube->sendData(renderer->getDeviceContext());
 	if (renderDepth)
 	{
-		depthShader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
-		depthShader->render(renderer->getDeviceContext(), cube->getIndexCount());
+		depth_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
+		depth_shader->render(renderer->getDeviceContext(), cube->getIndexCount());
 	}
 	else
 	{
-		shadowShader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
+		shadow_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
 			textureMgr->getTexture(L"wood"), maps, light.data(), camera);
-		shadowShader->render(renderer->getDeviceContext(), cube->getIndexCount());
+		shadow_shader->render(renderer->getDeviceContext(), cube->getIndexCount());
 	}
 
 	//sphere
@@ -186,14 +201,14 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 	sphere->sendData(renderer->getDeviceContext());
 	if (renderDepth)
 	{
-		depthShader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
-		depthShader->render(renderer->getDeviceContext(), sphere->getIndexCount());
+		depth_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
+		depth_shader->render(renderer->getDeviceContext(), sphere->getIndexCount());
 	}
 	else
 	{
-		shadowShader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
+		shadow_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
 			textureMgr->getTexture(L"wood"), maps, light.data(), camera);
-		shadowShader->render(renderer->getDeviceContext(), sphere->getIndexCount());
+		shadow_shader->render(renderer->getDeviceContext(), sphere->getIndexCount());
 	}
 }
 
@@ -214,7 +229,7 @@ void App1::depthPass()
 			for (int j = 0; j < 6; ++j)
 			{
 				// Set the render target to be the render to texture.
-				shadowMap[mapID + j]->BindDsvAndSetNullRenderTarget(renderer->getDeviceContext());
+				shadowmap[mapID + j]->BindDsvAndSetNullRenderTarget(renderer->getDeviceContext());
 
 				// get the world, view, and projection matrices from the camera and d3d objects.
 				XMMATRIX lightViewMatrix = light[i]->getPointViewMatrix(j);
@@ -227,7 +242,7 @@ void App1::depthPass()
 		else
 		{
 			// Set the render target to be the render to texture.
-			shadowMap[mapID]->BindDsvAndSetNullRenderTarget(renderer->getDeviceContext());
+			shadowmap[mapID]->BindDsvAndSetNullRenderTarget(renderer->getDeviceContext());
 
 			// get the world, view, and projection matrices from the camera and d3d objects.
 			XMMATRIX lightViewMatrix = light[i]->getViewMatrix();
@@ -263,21 +278,21 @@ void App1::finalPass()
 		XMFLOAT3 light_pos = light[i]->getPosition();
 		worldMatrix = XMMatrixScaling(.5f, .5f, .5f);
 		worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(light_pos.x, light_pos.y, light_pos.z));
-		lightDebugShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, light[i].get());
-		lightDebugShader->render(renderer->getDeviceContext(), light_debug_sphere->getIndexCount());
+		light_debug_shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, light[i].get());
+		light_debug_shader->render(renderer->getDeviceContext(), light_debug_sphere->getIndexCount());
 	}
 
 	// Render other objects used in multiple passes
-	renderObjects(viewMatrix, projectionMatrix, shadowMap.data(), false);
+	renderObjects(viewMatrix, projectionMatrix, shadowmap.data(), false);
 
 	//Render 2D meshes
 	worldMatrix = renderer->getWorldMatrix();
 	viewMatrix = camera->getOrthoViewMatrix();
 	projectionMatrix = renderer->getOrthoMatrix();
 	renderer->setZBuffer(false);
-	orthoMesh->sendData(renderer->getDeviceContext());
-	textureShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, shadowMap[gui_shadow_map_display_index]->getDepthMapSRV());
-	textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
+	orthomesh->sendData(renderer->getDeviceContext());
+	texture_shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, shadowmap[gui_shadow_map_display_index]->getDepthMapSRV());
+	texture_shader->render(renderer->getDeviceContext(), orthomesh->getIndexCount());
 	renderer->setZBuffer(true);
 
 	gui();
@@ -318,6 +333,14 @@ void App1::gui()
 	ImGui::PushItemWidth(ImGui::GetWindowWidth() * .5f);
 	ImGui::SliderInt("Display Shadow Map Number", &gui_shadow_map_display_index, 0, 6 * N_LIGHTS);
 	ImGui::PopItemWidth();
+
+	ImGui::Separator();
+
+	ImGui::Text("Terrain Mesh Settings:");
+	ImGui::SliderFloat2("minMaxLOD", &gui_min_max_LOD.x, 0.f, 100.f);
+	ImGui::SliderFloat2("minMaxDistance", &gui_min_max_distance.x, 0.f, 200.f);
+
+	ImGui::Separator();
 
 	static int open_light_editor = 0;
 	open_light_editor += ImGui::Selectable("Edit Lights", true);
