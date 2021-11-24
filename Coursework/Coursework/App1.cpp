@@ -76,7 +76,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	orthomesh = std::make_unique<OrthoMesh>(renderer->getDevice(), renderer->getDeviceContext(), screenWidth / 4, screenHeight / 4, screenWidth / 3, screenHeight / 3);
 
 	//Init additional objects
-	//mesh = std::make_unique<PlaneMesh>(renderer->getDevice(), renderer->getDeviceContext());
+	mesh = std::make_unique<PlaneMesh>(renderer->getDevice(), renderer->getDeviceContext());
 	model = std::make_unique<AModel>(renderer->getDevice(), "res/teapot.obj");
 	cube = std::make_unique<CubeMesh>(renderer->getDevice(), renderer->getDeviceContext());
 	sphere = std::make_unique<SphereMesh>(renderer->getDevice(), renderer->getDeviceContext());
@@ -135,7 +135,7 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 
 	//floor
 	world = XMMatrixTranslation(-50.f, 0.f, -10.f);
-	/*mesh->sendData(renderer->getDeviceContext());
+	mesh->sendData(renderer->getDeviceContext());
 	if (renderDepth)
 	{
 		depth_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
@@ -146,9 +146,9 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 		shadow_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
 			textureMgr->getTexture(L"brick"), maps, light.data(), camera);
 		shadow_shader->render(renderer->getDeviceContext(), mesh->getIndexCount());
-	}*/
+	}
 
-	terrain->sendData(renderer->getDeviceContext());
+	/*terrain->sendData(renderer->getDeviceContext());
 	if (renderDepth)
 	{
 		depth_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
@@ -159,7 +159,7 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 		tess_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
 			textureMgr->getTexture(L"brick"), gui_min_max_LOD, gui_min_max_distance, maps, light.data(), camera);
 		tess_shader->render(renderer->getDeviceContext(), terrain->getIndexCount());
-	}
+	}*/
 
 	//teapot
 	world = XMMatrixRotationAxis(XMVectorSet(0.f, 1.f, 0.f, 1.f), AI_DEG_TO_RAD(objects_roation_angle));

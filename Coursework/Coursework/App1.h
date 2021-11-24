@@ -51,7 +51,7 @@ private:
 
 	//Meshes
 	std::unique_ptr<OrthoMesh> orthomesh;
-	//std::unique_ptr<PlaneMesh> mesh;
+	std::unique_ptr<PlaneMesh> mesh;
 	std::unique_ptr<CubeMesh> cube;
 	std::unique_ptr<SphereMesh> sphere;
 	std::unique_ptr<SphereMesh> light_debug_sphere;
