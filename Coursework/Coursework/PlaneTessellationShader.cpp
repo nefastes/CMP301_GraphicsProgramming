@@ -2,7 +2,7 @@
 
 PlaneTessellationShader::PlaneTessellationShader(ID3D11Device* device, HWND hwnd) : BaseShader(device, hwnd)
 {
-	initShader(L"tessellation_vs.cso", L"tessellation_terrain_fodd_hs.cso", L"tessellation_terrain_ds.cso", L"tessellation_ps.cso");
+	initShader(L"tessellation_terrain_vs.cso", L"tessellation_terrain_fodd_hs.cso", L"tessellation_terrain_ds.cso", L"tessellation_terrain_ps.cso");
 }
 
 PlaneTessellationShader::~PlaneTessellationShader()
@@ -65,6 +65,39 @@ void PlaneTessellationShader::setShaderParameters(ID3D11DeviceContext* deviceCon
 	settingsPtr->minMaxDistance = minMaxDistance;
 	deviceContext->Unmap(settingsBuffer, 0);
 	deviceContext->HSSetConstantBuffers(0, 1, &settingsBuffer);
+
+	// Send light data to pixel shader
+	deviceContext->Map(lightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	LightBufferType* lightPtr = (LightBufferType*)mappedResource.pData;
+	for (int i = 0; i < N_LIGHTS; ++i)
+	{
+		lightPtr->ambient[i] = light[i]->getAmbientColour();
+		lightPtr->diffuse[i] = light[i]->getDiffuseColour();
+		lightPtr->direction[i] = XMFLOAT4(light[i]->getDirection().x, light[i]->getDirection().y, light[i]->getDirection().z, 1.f);
+		int type = light[i]->getType();
+		lightPtr->light_type[i] = XMINT4(type, type, type, type);
+		lightPtr->lightPosition[i] = XMFLOAT4(light[i]->getPosition().x, light[i]->getPosition().y, light[i]->getPosition().z, 1.f);
+		float intensity = light[i]->getIntensity();
+		lightPtr->lightIntensity[i] = XMFLOAT4(intensity, intensity, intensity, intensity);
+		lightPtr->attenuation_factors[i] = XMFLOAT4(light[i]->getAttenuationFactors().x, light[i]->getAttenuationFactors().y, light[i]->getAttenuationFactors().z, 1.f);
+		lightPtr->spot_falloff[i] = XMFLOAT4(light[i]->getSpotFalloff(), light[i]->getSpotFalloff(), light[i]->getSpotFalloff(), light[i]->getSpotFalloff());
+		lightPtr->spot_angle[i] = XMFLOAT4(light[i]->getSpotAngle(), light[i]->getSpotAngle(), light[i]->getSpotAngle(), light[i]->getSpotAngle());
+		lightPtr->specular_power[i] = XMFLOAT4(light[i]->getSpecularPower(), light[i]->getSpecularPower(), light[i]->getSpecularPower(), light[i]->getSpecularPower());
+		lightPtr->specular_colour[i] = light[i]->getSpecularColour();
+		lightPtr->shadow_bias[i] = XMFLOAT4(light[i]->getShadowBias(), light[i]->getShadowBias(), light[i]->getShadowBias(), light[i]->getShadowBias());
+	}
+	deviceContext->Unmap(lightBuffer, 0);
+	deviceContext->PSSetConstantBuffers(0, 1, &lightBuffer);
+
+	// Set shader texture resource in the pixel shader.
+	deviceContext->PSSetShaderResources(0, 1, &texture);
+	for (int i = 0; i < N_LIGHTS * 6; ++i)
+	{
+		ID3D11ShaderResourceView* depthMap = maps[i]->getDepthMapSRV();
+		deviceContext->PSSetShaderResources(i + 1, 1, &depthMap);
+	}
+	deviceContext->PSSetSamplers(0, 1, &sampleState);
+	deviceContext->PSSetSamplers(1, 1, &sampleStateShadow);
 }
 
 void PlaneTessellationShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilename)
@@ -83,6 +116,17 @@ void PlaneTessellationShader::initShader(const wchar_t* vsFilename, const wchar_
 	matrixBufferDesc.StructureByteStride = 0;
 	renderer->CreateBuffer(&matrixBufferDesc, NULL, &matrixBuffer);
 
+	// Setup light buffer
+	D3D11_BUFFER_DESC lightBufferDesc;
+	lightBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	lightBufferDesc.ByteWidth = sizeof(LightBufferType);
+	lightBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	lightBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	lightBufferDesc.MiscFlags = 0;
+	lightBufferDesc.StructureByteStride = 0;
+	renderer->CreateBuffer(&lightBufferDesc, NULL, &lightBuffer);
+
+	// Setup tessellation settings buffer
 	D3D11_BUFFER_DESC settingsBufferDesc;
 	settingsBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 	settingsBufferDesc.ByteWidth = sizeof(SettingsBufferType);
@@ -91,6 +135,33 @@ void PlaneTessellationShader::initShader(const wchar_t* vsFilename, const wchar_
 	settingsBufferDesc.MiscFlags = 0;
 	settingsBufferDesc.StructureByteStride = 0;
 	renderer->CreateBuffer(&settingsBufferDesc, NULL, &settingsBuffer);
+
+	// Create a texture sampler state description.
+	D3D11_SAMPLER_DESC samplerDesc;
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.MipLODBias = 0.0f;
+	samplerDesc.MaxAnisotropy = 1;
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+	samplerDesc.BorderColor[0] = 0;
+	samplerDesc.BorderColor[1] = 0;
+	samplerDesc.BorderColor[2] = 0;
+	samplerDesc.BorderColor[3] = 0;
+	samplerDesc.MinLOD = 0;
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	renderer->CreateSamplerState(&samplerDesc, &sampleState);
+	// Sampler for shadow map sampling.
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
+	samplerDesc.BorderColor[0] = 1.0f;
+	samplerDesc.BorderColor[1] = 1.0f;
+	samplerDesc.BorderColor[2] = 1.0f;
+	samplerDesc.BorderColor[3] = 1.0f;
+	renderer->CreateSamplerState(&samplerDesc, &sampleStateShadow);
 }
 
 void PlaneTessellationShader::initShader(const wchar_t* vsFilename, const wchar_t* hsFilename, const wchar_t* dsFilename, const wchar_t* psFilename)

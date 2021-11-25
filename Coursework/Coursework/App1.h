@@ -12,6 +12,8 @@
 #include "LightDebugShader.h"
 #include "DebugNormalsShader.h"
 #include "PlaneTessellationShader.h"
+#include "PlaneTessellationColourShader.h"
+#include "PlaneTessellationTextureShader.h"
 
 #include "TerrainMesh.h"
 
@@ -42,6 +44,8 @@ private:
 	std::unique_ptr<DepthShader> depth_shader;
 	std::unique_ptr<LightDebugShader> light_debug_shader;
 	std::unique_ptr<PlaneTessellationShader> tess_shader;
+	std::unique_ptr<PlaneTessellationColourShader> tess_shader_2;
+	std::unique_ptr<PlaneTessellationTextureShader> tess_shader_3;
 	std::unique_ptr<TextureShader> texture_shader;
 	std::unique_ptr<DebugNormalsShader> debug_normals_shader;
 

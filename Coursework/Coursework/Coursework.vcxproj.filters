@@ -55,6 +55,9 @@
     <Filter Include="Source Files\Debug">
       <UniqueIdentifier>{a469eb96-79b8-4289-b401-27759a81b30d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\Tessellation\Debug">
+      <UniqueIdentifier>{104b0352-7e85-4f66-a7b7-3332ee180634}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -84,6 +87,12 @@
     <ClCompile Include="DebugNormalsShader.cpp">
       <Filter>Source Files\Debug</Filter>
     </ClCompile>
+    <ClCompile Include="PlaneTessellationColourShader.cpp">
+      <Filter>Source Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="PlaneTessellationTextureShader.cpp">
+      <Filter>Source Files\Debug</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App1.h">
@@ -108,6 +117,12 @@
       <Filter>Header Files\Debug</Filter>
     </ClInclude>
     <ClInclude Include="DebugNormalsShader.h">
+      <Filter>Header Files\Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="PlaneTessellationColourShader.h">
+      <Filter>Header Files\Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="PlaneTessellationTextureShader.h">
       <Filter>Header Files\Debug</Filter>
     </ClInclude>
   </ItemGroup>
@@ -136,11 +151,32 @@
     <FxCompile Include="shaders\texture_ps.hlsl">
       <Filter>Resource Files\Basic</Filter>
     </FxCompile>
-    <FxCompile Include="shaders\tessellation_ps.hlsl">
+    <FxCompile Include="shaders\debug_normals_gs.hlsl">
+      <Filter>Resource Files\Debug</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\debug_normals_ps.hlsl">
+      <Filter>Resource Files\Debug</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\debug_normals_vs.hlsl">
+      <Filter>Resource Files\Debug</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_terrain_ps.hlsl">
       <Filter>Resource Files\Tessellation</Filter>
     </FxCompile>
-    <FxCompile Include="shaders\tessellation_terrain_ds.hlsl">
+    <FxCompile Include="shaders\tessellation_terrain_vs.hlsl">
       <Filter>Resource Files\Tessellation</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_colour_vs.hlsl">
+      <Filter>Resource Files\Tessellation\Debug</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_colour_ds.hlsl">
+      <Filter>Resource Files\Tessellation\Debug</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_colour_hs.hlsl">
+      <Filter>Resource Files\Tessellation\Debug</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_colour_ps.hlsl">
+      <Filter>Resource Files\Tessellation\Debug</Filter>
     </FxCompile>
     <FxCompile Include="shaders\tessellation_terrain_feven_hs.hlsl">
       <Filter>Resource Files\Tessellation</Filter>
@@ -151,17 +187,20 @@
     <FxCompile Include="shaders\tessellation_terrain_integer_hs.hlsl">
       <Filter>Resource Files\Tessellation</Filter>
     </FxCompile>
-    <FxCompile Include="shaders\tessellation_vs.hlsl">
+    <FxCompile Include="shaders\tessellation_terrain_ds.hlsl">
       <Filter>Resource Files\Tessellation</Filter>
     </FxCompile>
-    <FxCompile Include="shaders\debug_normals_gs.hlsl">
-      <Filter>Resource Files\Debug</Filter>
+    <FxCompile Include="shaders\tessellation_texture_ds.hlsl">
+      <Filter>Resource Files\Tessellation\Debug</Filter>
     </FxCompile>
-    <FxCompile Include="shaders\debug_normals_ps.hlsl">
-      <Filter>Resource Files\Debug</Filter>
+    <FxCompile Include="shaders\tessellation_texture_hs.hlsl">
+      <Filter>Resource Files\Tessellation\Debug</Filter>
     </FxCompile>
-    <FxCompile Include="shaders\debug_normals_vs.hlsl">
-      <Filter>Resource Files\Debug</Filter>
+    <FxCompile Include="shaders\tessellation_texture_ps.hlsl">
+      <Filter>Resource Files\Tessellation\Debug</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_texture_vs.hlsl">
+      <Filter>Resource Files\Tessellation\Debug</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

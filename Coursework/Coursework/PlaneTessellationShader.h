@@ -18,6 +18,22 @@ class PlaneTessellationShader : public BaseShader
 	};
 
 	//Additional buffers
+	struct LightBufferType
+	{
+		XMFLOAT4 ambient[N_LIGHTS];
+		XMFLOAT4 diffuse[N_LIGHTS];
+		XMFLOAT4 direction[N_LIGHTS];			//cause of chunks, last float is padding
+		XMINT4 light_type[N_LIGHTS];			//cause of chunks the light type value is repeated on all slots
+		XMFLOAT4 lightPosition[N_LIGHTS];
+		XMFLOAT4 lightIntensity[N_LIGHTS];		//value repeated on all components
+		XMFLOAT4 attenuation_factors[N_LIGHTS];	//cause of chunks, last float is padding
+		XMFLOAT4 spot_falloff[N_LIGHTS];		//value repeated on all components
+		XMFLOAT4 spot_angle[N_LIGHTS];			//value repeated on all components
+		XMFLOAT4 specular_power[N_LIGHTS];		//value repeated on all components
+		XMFLOAT4 specular_colour[N_LIGHTS];
+		XMFLOAT4 shadow_bias[N_LIGHTS];			//value repeated on all components
+	};
+
 	struct SettingsBufferType
 	{
 		XMFLOAT4 tessellationCenterPosition;
@@ -38,7 +54,9 @@ private:
 	void initShader(const wchar_t* vsFilename, const wchar_t* hsFilename, const wchar_t* dsFilename, const wchar_t* psFilename);
 
 private:
+	ID3D11SamplerState* sampleStateShadow;
 	ID3D11Buffer* matrixBuffer;
+	ID3D11Buffer* lightBuffer;
 	ID3D11Buffer* settingsBuffer;
 };
 

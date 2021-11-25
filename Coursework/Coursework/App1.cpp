@@ -42,6 +42,8 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	shadow_shader = std::make_unique<ShadowShader>(renderer->getDevice(), hwnd);
 	light_debug_shader = std::make_unique<LightDebugShader>(renderer->getDevice(), hwnd);
 	tess_shader = std::make_unique<PlaneTessellationShader>(renderer->getDevice(), hwnd);
+	tess_shader_2 = std::make_unique<PlaneTessellationColourShader>(renderer->getDevice(), hwnd);
+	tess_shader_3 = std::make_unique<PlaneTessellationTextureShader>(renderer->getDevice(), hwnd);
 	debug_normals_shader = std::make_unique<DebugNormalsShader>(renderer->getDevice(), hwnd);
 
 	// Variables for defining shadow map
@@ -133,10 +135,10 @@ bool App1::render()
 void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique_ptr<ShadowMap>* maps, bool renderDepth)
 {
 	//no need to pass it cause it's assigned in here anyways
-	XMMATRIX world;
+	XMMATRIX world = renderer->getWorldMatrix();
 
 	//floor
-	world = XMMatrixTranslation(-50.f, 0.f, -10.f);
+	/*world = XMMatrixTranslation(-50.f, 0.f, -10.f);
 	mesh->sendData(renderer->getDeviceContext());
 	if (renderDepth)
 	{
@@ -153,9 +155,9 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 			debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
 			debug_normals_shader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 		}
-	}
+	}*/
 
-	/*terrain->sendData(renderer->getDeviceContext());
+	terrain->sendData(renderer->getDeviceContext());
 	if (renderDepth)
 	{
 		depth_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
@@ -166,7 +168,18 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 		tess_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
 			textureMgr->getTexture(L"brick"), gui_min_max_LOD, gui_min_max_distance, maps, light.data(), camera);
 		tess_shader->render(renderer->getDeviceContext(), terrain->getIndexCount());
-	}*/
+		/*tess_shader_2->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
+			XMFLOAT4(camera->getPosition().x, camera->getPosition().y, camera->getPosition().z, 1.f), gui_min_max_LOD, gui_min_max_distance);
+		tess_shader_2->render(renderer->getDeviceContext(), terrain->getIndexCount());*/
+		/*tess_shader_3->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
+			XMFLOAT4(camera->getPosition().x, camera->getPosition().y, camera->getPosition().z, 1.f), gui_min_max_LOD, gui_min_max_distance, textureMgr->getTexture(L"brick"));
+		tess_shader_3->render(renderer->getDeviceContext(), terrain->getIndexCount());*/
+		if (gui_render_normals)
+		{
+			debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
+			debug_normals_shader->render(renderer->getDeviceContext(), terrain->getIndexCount());
+		}
+	}
 
 	//teapot
 	world = XMMatrixRotationAxis(XMVectorSet(0.f, 1.f, 0.f, 1.f), AI_DEG_TO_RAD(objects_roation_angle));

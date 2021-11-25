@@ -12,8 +12,8 @@ struct InputType
 struct OutputType
 {
     float3 position : POSITION;
-	float2 tex : TEXCOORD0;
-	float3 normal : NORMAL;
+    float2 tex : TEXCOORD0;
+    float3 normal : NORMAL;
 };
 
 OutputType main(InputType input)
@@ -23,11 +23,11 @@ OutputType main(InputType input)
 	 // Pass the vertex position into the hull shader.
     output.position = input.position;
     
-    // Pass the input tex into the hull shader.
-	output.tex = input.tex;
+    // Pass the input texture coordinates into the hull shader.
+    output.tex = input.tex;
     
-    //Pass the input normal into the hull shader.
-	output.normal = input.normal;
+    // Pass the input normal into the hull shader.
+    output.normal = input.normal;
     
     return output;
 }
