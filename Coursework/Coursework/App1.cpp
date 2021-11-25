@@ -2,7 +2,8 @@
 // Lab 1 example, simple coloured triangle mesh
 #include "App1.h"
 
-App1::App1() : gui_animate_objects(false), objects_roation_angle(0.f), gui_shadow_map_display_index(0), gui_min_max_LOD(1.f, 15.f), gui_min_max_distance(50.f, 75.f)
+App1::App1() : gui_animate_objects(false), objects_roation_angle(0.f), gui_shadow_map_display_index(0), gui_min_max_LOD(1.f, 15.f), gui_min_max_distance(50.f, 75.f),
+gui_render_normals(false)
 {
 	for (int i = 0; i < N_LIGHTS; ++i)
 	{
@@ -147,6 +148,11 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 		shadow_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
 			textureMgr->getTexture(L"brick"), maps, light.data(), camera);
 		shadow_shader->render(renderer->getDeviceContext(), mesh->getIndexCount());
+		if (gui_render_normals)
+		{
+			debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
+			debug_normals_shader->render(renderer->getDeviceContext(), mesh->getIndexCount());
+		}
 	}
 
 	/*terrain->sendData(renderer->getDeviceContext());
@@ -178,8 +184,11 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 		shadow_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
 			textureMgr->getTexture(L"wood"), maps, light.data(), camera);
 		shadow_shader->render(renderer->getDeviceContext(), model->getIndexCount());
-		debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
-		debug_normals_shader->render(renderer->getDeviceContext(), model->getIndexCount());
+		if (gui_render_normals)
+		{
+			debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
+			debug_normals_shader->render(renderer->getDeviceContext(), model->getIndexCount());
+		}
 	}
 
 	//cube
@@ -197,6 +206,11 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 		shadow_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
 			textureMgr->getTexture(L"wood"), maps, light.data(), camera);
 		shadow_shader->render(renderer->getDeviceContext(), cube->getIndexCount());
+		if (gui_render_normals)
+		{
+			debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
+			debug_normals_shader->render(renderer->getDeviceContext(), cube->getIndexCount());
+		}
 	}
 
 	//sphere
@@ -212,6 +226,11 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 		shadow_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
 			textureMgr->getTexture(L"wood"), maps, light.data(), camera);
 		shadow_shader->render(renderer->getDeviceContext(), sphere->getIndexCount());
+		if (gui_render_normals)
+		{
+			debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
+			debug_normals_shader->render(renderer->getDeviceContext(), sphere->getIndexCount());
+		}
 	}
 }
 
@@ -330,6 +349,7 @@ void App1::gui()
 	ImGui::Text("FPS: %.2f", timer->getFPS());
 	ImGui::Checkbox("Wireframe mode", &wireframeToggle);
 	ImGui::Checkbox("Animate Objects", &gui_animate_objects);
+	ImGui::Checkbox("Render Normals", &gui_render_normals);
 
 	ImGui::Separator();
 

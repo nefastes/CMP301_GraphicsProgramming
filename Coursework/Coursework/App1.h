@@ -60,8 +60,9 @@ private:
 	std::unique_ptr<TerrainMesh> terrain;
 	float objects_roation_angle;
 
-	//Simple gui boolean to animate the objects (or not)
+	//General guis
 	bool gui_animate_objects;
+	bool gui_render_normals;
 
 	//up to MAX_N_LIGHTS lights, gui for the light properties 
 	std::array<std::unique_ptr<Light>, N_LIGHTS> light;
