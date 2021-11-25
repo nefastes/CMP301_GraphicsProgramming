@@ -9,5 +9,5 @@ struct InputType
 
 float4 main(InputType input) : SV_TARGET
 {
-    return float4(input.normal.xyz, 1.f);
+    return float4(abs(input.normal.xyz), 1.f);
 }
