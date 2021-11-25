@@ -1,5 +1,5 @@
 New coursework plan:
-	- finish tessellated plane with heightmap (depth shader with tessellation required) (could optmise dynamically assign GPU memory)
+	- finish tessellated plane with heightmap (depth shader with tessellation required) (could optmise dynamically assign GPU memory (can send less useless empty marices))
 	- do a simple post processing bloom
 	- grass instanced on the geometry shader (not manipulated)
 	- do a wooblely bubble

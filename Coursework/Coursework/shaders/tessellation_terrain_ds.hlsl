@@ -3,6 +3,9 @@
 
 #define N_LIGHTS 4
 
+Texture2D heightMap : register(t0);
+SamplerState Sampler : register(s0);
+
 cbuffer MatrixBuffer : register(b0)
 {
 	matrix worldMatrix;
@@ -36,6 +39,11 @@ struct OutputType
 	float4 lightViewPos[N_LIGHTS * 6] : TEXCOORD3;
 };
 
+float getHeight(float2 uv)
+{
+    return heightMap.SampleLevel(Sampler, uv, 0).x * 20.f;
+}
+
 [domain("quad")]
 OutputType main(ConstantOutputType input, float2 uv : SV_DomainLocation, const OutputPatch<InputType, 4> patch)
 {
@@ -55,6 +63,9 @@ OutputType main(ConstantOutputType input, float2 uv : SV_DomainLocation, const O
         patch[1].tex * uv.x * (1.f - uv.y) +
         patch[2].tex * (1.f - uv.x) * uv.y +
         patch[3].tex * uv.x * uv.y;
+	
+	//Get the height of the vertex from the heightmap
+    vertexPosition.y = getHeight(texCoord);
 		    
     // Calculate the position of the new vertex against the world, view, and projection matrices.
     output.position = mul(float4(vertexPosition, 1.0f), worldMatrix);

@@ -33,6 +33,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	BaseApplication::init(hinstance, hwnd, screenWidth, screenHeight, in, VSYNC, FULL_SCREEN);
 
 	// Load textures
+	textureMgr->loadTexture(L"heightMap", L"res/height.png");
 	textureMgr->loadTexture(L"brick", L"res/brick1.dds");
 	textureMgr->loadTexture(L"wood", L"res/wood.png");
 
@@ -157,6 +158,7 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 		}
 	}*/
 
+	world = XMMatrixTranslation(0.f, -20.f, 0.f);
 	terrain->sendData(renderer->getDeviceContext());
 	if (renderDepth)
 	{
@@ -166,7 +168,7 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 	else
 	{
 		tess_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
-			textureMgr->getTexture(L"brick"), gui_min_max_LOD, gui_min_max_distance, maps, light.data(), camera);
+			textureMgr->getTexture(L"brick"), textureMgr->getTexture(L"heightMap"), gui_min_max_LOD, gui_min_max_distance, maps, light.data(), camera);
 		tess_shader->render(renderer->getDeviceContext(), terrain->getIndexCount());
 		/*tess_shader_2->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
 			XMFLOAT4(camera->getPosition().x, camera->getPosition().y, camera->getPosition().z, 1.f), gui_min_max_LOD, gui_min_max_distance);

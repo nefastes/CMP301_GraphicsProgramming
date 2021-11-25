@@ -46,7 +46,8 @@ public:
 	PlaneTessellationShader(ID3D11Device* device, HWND hwnd);
 	~PlaneTessellationShader();
 
-	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& projection, ID3D11ShaderResourceView* texture,
+	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& projection,
+		ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* heightMap,
 		XMFLOAT2& minMaxLOD, XMFLOAT2& minMaxDistance, std::unique_ptr<ShadowMap>* maps, std::unique_ptr<Light>* light, Camera* camera);
 
 private:
