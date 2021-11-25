@@ -25,9 +25,6 @@
     <Filter Include="Resource Files\Lighting\DepthPass">
       <UniqueIdentifier>{dcdba8f4-cded-4739-bb7c-32af7486396a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Files\Lighting\Debug">
-      <UniqueIdentifier>{3bb3ed13-9414-45f3-a6de-edba303d84da}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource Files\Lighting\Light + Shadows">
       <UniqueIdentifier>{f6eed908-84cb-43a6-87ec-20efe307e72c}</UniqueIdentifier>
     </Filter>
@@ -49,15 +46,21 @@
     <Filter Include="Source Files\Basic">
       <UniqueIdentifier>{48a9edd7-510c-4c83-b37b-f1e8fbe59bf4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\Debug">
+      <UniqueIdentifier>{3bb3ed13-9414-45f3-a6de-edba303d84da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Debug">
+      <UniqueIdentifier>{8bf476d8-7f81-4818-a5fa-d7236811df65}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Debug">
+      <UniqueIdentifier>{a469eb96-79b8-4289-b401-27759a81b30d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DepthShader.cpp">
-      <Filter>Source Files\Lighting</Filter>
-    </ClCompile>
-    <ClCompile Include="LightDebugShader.cpp">
       <Filter>Source Files\Lighting</Filter>
     </ClCompile>
     <ClCompile Include="ShadowShader.cpp">
@@ -75,15 +78,18 @@
     <ClCompile Include="TerrainMesh.cpp">
       <Filter>Source Files\Tessellation</Filter>
     </ClCompile>
+    <ClCompile Include="LightDebugShader.cpp">
+      <Filter>Source Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="DebugNormalsShader.cpp">
+      <Filter>Source Files\Debug</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App1.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ShadowShader.h">
-      <Filter>Header Files\Lighting</Filter>
-    </ClInclude>
-    <ClInclude Include="LightDebugShader.h">
       <Filter>Header Files\Lighting</Filter>
     </ClInclude>
     <ClInclude Include="DepthShader.h">
@@ -98,6 +104,12 @@
     <ClInclude Include="TerrainMesh.h">
       <Filter>Header Files\Tessellation</Filter>
     </ClInclude>
+    <ClInclude Include="LightDebugShader.h">
+      <Filter>Header Files\Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="DebugNormalsShader.h">
+      <Filter>Header Files\Debug</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\depth_vs.hlsl">
@@ -107,10 +119,10 @@
       <Filter>Resource Files\Lighting\DepthPass</Filter>
     </FxCompile>
     <FxCompile Include="shaders\light_debug_vs.hlsl">
-      <Filter>Resource Files\Lighting\Debug</Filter>
+      <Filter>Resource Files\Debug</Filter>
     </FxCompile>
     <FxCompile Include="shaders\light_debug_ps.hlsl">
-      <Filter>Resource Files\Lighting\Debug</Filter>
+      <Filter>Resource Files\Debug</Filter>
     </FxCompile>
     <FxCompile Include="shaders\shadow_ps.hlsl">
       <Filter>Resource Files\Lighting\Light + Shadows</Filter>
@@ -141,6 +153,15 @@
     </FxCompile>
     <FxCompile Include="shaders\tessellation_vs.hlsl">
       <Filter>Resource Files\Tessellation</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\debug_normals_gs.hlsl">
+      <Filter>Resource Files\Debug</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\debug_normals_ps.hlsl">
+      <Filter>Resource Files\Debug</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\debug_normals_vs.hlsl">
+      <Filter>Resource Files\Debug</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

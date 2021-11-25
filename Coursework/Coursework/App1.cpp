@@ -41,6 +41,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	shadow_shader = std::make_unique<ShadowShader>(renderer->getDevice(), hwnd);
 	light_debug_shader = std::make_unique<LightDebugShader>(renderer->getDevice(), hwnd);
 	tess_shader = std::make_unique<PlaneTessellationShader>(renderer->getDevice(), hwnd);
+	debug_normals_shader = std::make_unique<DebugNormalsShader>(renderer->getDevice(), hwnd);
 
 	// Variables for defining shadow map
 	int shadowmapWidth = 1024;	//MAX: 16'384
@@ -177,6 +178,8 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 		shadow_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
 			textureMgr->getTexture(L"wood"), maps, light.data(), camera);
 		shadow_shader->render(renderer->getDeviceContext(), model->getIndexCount());
+		debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
+		debug_normals_shader->render(renderer->getDeviceContext(), model->getIndexCount());
 	}
 
 	//cube

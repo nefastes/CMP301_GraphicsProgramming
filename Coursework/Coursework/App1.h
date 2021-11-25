@@ -10,6 +10,7 @@
 #include "ShadowShader.h"
 #include "DepthShader.h"
 #include "LightDebugShader.h"
+#include "DebugNormalsShader.h"
 #include "PlaneTessellationShader.h"
 
 #include "TerrainMesh.h"
@@ -42,6 +43,7 @@ private:
 	std::unique_ptr<LightDebugShader> light_debug_shader;
 	std::unique_ptr<PlaneTessellationShader> tess_shader;
 	std::unique_ptr<TextureShader> texture_shader;
+	std::unique_ptr<DebugNormalsShader> debug_normals_shader;
 
 	//Shadowmaps
 	std::array<std::unique_ptr<ShadowMap>, N_LIGHTS * 6> shadowmap;	//Create 6 * N_LIGHTS if all of them are point lights
