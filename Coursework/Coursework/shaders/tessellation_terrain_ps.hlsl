@@ -146,7 +146,4 @@ float4 main(InputType input) : SV_TARGET
     ambient_avg /= (float) ambient_count;
     colour = saturate(colour + ambient_avg);
     return colour * texture_colour + specular_new_colour;
-    //return texture_colour;
-    //return float4(1.f, 0.f, 0.f, 1.f);
-
 }
