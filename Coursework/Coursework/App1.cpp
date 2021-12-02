@@ -170,19 +170,13 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 	else
 	{
 		tess_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
-			textureMgr->getTexture(L"brick"), textureMgr->getTexture(L"heightMap"), gui_min_max_LOD, gui_min_max_distance, maps, light.data(), camera);
+			textureMgr->getTexture(L"brick"), textureMgr->getTexture(L"heightMap"), gui_min_max_LOD, gui_min_max_distance, maps, light.data(), camera, gui_render_normals);
 		tess_shader->render(renderer->getDeviceContext(), terrain->getIndexCount());
-		/*tess_shader_2->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
-			XMFLOAT4(camera->getPosition().x, camera->getPosition().y, camera->getPosition().z, 1.f), gui_min_max_LOD, gui_min_max_distance);
-		tess_shader_2->render(renderer->getDeviceContext(), terrain->getIndexCount());*/
-		/*tess_shader_3->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
-			XMFLOAT4(camera->getPosition().x, camera->getPosition().y, camera->getPosition().z, 1.f), gui_min_max_LOD, gui_min_max_distance, textureMgr->getTexture(L"brick"));
-		tess_shader_3->render(renderer->getDeviceContext(), terrain->getIndexCount());*/
-		if (gui_render_normals)
+		/*if (gui_render_normals)	//Useless since normals are being recalculated per texel
 		{
 			debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
 			debug_normals_shader->render(renderer->getDeviceContext(), terrain->getIndexCount());
-		}
+		}*/
 	}
 
 	//teapot

@@ -23,15 +23,11 @@ class PlaneTessellationShader : public BaseShader
 		XMFLOAT4 ambient[N_LIGHTS];
 		XMFLOAT4 diffuse[N_LIGHTS];
 		XMFLOAT4 direction[N_LIGHTS];			//cause of chunks, last float is padding
-		XMINT4 light_type[N_LIGHTS];			//cause of chunks the light type value is repeated on all slots
 		XMFLOAT4 lightPosition[N_LIGHTS];
-		XMFLOAT4 lightIntensity[N_LIGHTS];		//value repeated on all components
 		XMFLOAT4 attenuation_factors[N_LIGHTS];	//cause of chunks, last float is padding
-		XMFLOAT4 spot_falloff[N_LIGHTS];		//value repeated on all components
-		XMFLOAT4 spot_angle[N_LIGHTS];			//value repeated on all components
-		XMFLOAT4 specular_power[N_LIGHTS];		//value repeated on all components
 		XMFLOAT4 specular_colour[N_LIGHTS];
-		XMFLOAT4 shadow_bias[N_LIGHTS];			//value repeated on all components
+		XMFLOAT4 type_intensity_specularPower_shadowBias[N_LIGHTS];
+		XMFLOAT4 falloff_spotAngle_renderNormals_padding[N_LIGHTS];
 	};
 
 	struct SettingsBufferType
@@ -48,7 +44,7 @@ public:
 
 	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& projection,
 		ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* heightMap,
-		XMFLOAT2& minMaxLOD, XMFLOAT2& minMaxDistance, std::unique_ptr<ShadowMap>* maps, std::unique_ptr<Light>* light, Camera* camera);
+		XMFLOAT2& minMaxLOD, XMFLOAT2& minMaxDistance, std::unique_ptr<ShadowMap>* maps, std::unique_ptr<Light>* light, Camera* camera, bool render_normals);
 
 private:
 	void initShader(const wchar_t* vsFilename, const wchar_t* psFilename);

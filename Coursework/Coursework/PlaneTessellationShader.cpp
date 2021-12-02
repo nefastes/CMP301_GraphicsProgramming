@@ -29,7 +29,7 @@ PlaneTessellationShader::~PlaneTessellationShader()
 
 void PlaneTessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix,
 	ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* heightMap,
-	XMFLOAT2& minMaxLOD, XMFLOAT2& minMaxDistance, std::unique_ptr<ShadowMap>* maps, std::unique_ptr<Light>* light, Camera* camera)
+	XMFLOAT2& minMaxLOD, XMFLOAT2& minMaxDistance, std::unique_ptr<ShadowMap>* maps, std::unique_ptr<Light>* light, Camera* camera, bool render_normals)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -77,18 +77,19 @@ void PlaneTessellationShader::setShaderParameters(ID3D11DeviceContext* deviceCon
 	{
 		lightPtr->ambient[i] = light[i]->getAmbientColour();
 		lightPtr->diffuse[i] = light[i]->getDiffuseColour();
-		lightPtr->direction[i] = XMFLOAT4(light[i]->getDirection().x, light[i]->getDirection().y, light[i]->getDirection().z, 1.f);
-		int type = light[i]->getType();
-		lightPtr->light_type[i] = XMINT4(type, type, type, type);
-		lightPtr->lightPosition[i] = XMFLOAT4(light[i]->getPosition().x, light[i]->getPosition().y, light[i]->getPosition().z, 1.f);
-		float intensity = light[i]->getIntensity();
-		lightPtr->lightIntensity[i] = XMFLOAT4(intensity, intensity, intensity, intensity);
-		lightPtr->attenuation_factors[i] = XMFLOAT4(light[i]->getAttenuationFactors().x, light[i]->getAttenuationFactors().y, light[i]->getAttenuationFactors().z, 1.f);
-		lightPtr->spot_falloff[i] = XMFLOAT4(light[i]->getSpotFalloff(), light[i]->getSpotFalloff(), light[i]->getSpotFalloff(), light[i]->getSpotFalloff());
-		lightPtr->spot_angle[i] = XMFLOAT4(light[i]->getSpotAngle(), light[i]->getSpotAngle(), light[i]->getSpotAngle(), light[i]->getSpotAngle());
-		lightPtr->specular_power[i] = XMFLOAT4(light[i]->getSpecularPower(), light[i]->getSpecularPower(), light[i]->getSpecularPower(), light[i]->getSpecularPower());
+		XMFLOAT3 direction = light[i]->getDirection();
+		lightPtr->direction[i] = XMFLOAT4(direction.x, direction.y, direction.z, 1.f);
+		XMFLOAT3 position = light[i]->getPosition();
+		lightPtr->lightPosition[i] = XMFLOAT4(position.x, position.y, position.z, 1.f);
+		XMFLOAT3 attenuatio_factors = light[i]->getAttenuationFactors();
+		lightPtr->attenuation_factors[i] = XMFLOAT4(attenuatio_factors.x, attenuatio_factors.y, attenuatio_factors.z, 1.f);
 		lightPtr->specular_colour[i] = light[i]->getSpecularColour();
-		lightPtr->shadow_bias[i] = XMFLOAT4(light[i]->getShadowBias(), light[i]->getShadowBias(), light[i]->getShadowBias(), light[i]->getShadowBias());
+
+		//Better data compression
+		//Compress type, intensity, specular_power and shadow_bias into a unique float4
+		lightPtr->type_intensity_specularPower_shadowBias[i] = XMFLOAT4((float)light[i]->getType(), light[i]->getIntensity(), light[i]->getSpecularPower(), light[i]->getShadowBias());
+		//Compress falloff, spotangle, renderNormals and a padding into a unique float4
+		lightPtr->falloff_spotAngle_renderNormals_padding[i] = XMFLOAT4(light[i]->getSpotFalloff(), light[i]->getSpotAngle(), (float)render_normals, 1.f);
 	}
 	deviceContext->Unmap(lightBuffer, 0);
 	deviceContext->PSSetConstantBuffers(0, 1, &lightBuffer);

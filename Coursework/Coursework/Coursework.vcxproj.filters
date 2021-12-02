@@ -209,7 +209,7 @@
       <Filter>Resource Files\Tessellation\Debug</Filter>
     </FxCompile>
     <FxCompile Include="shaders\tessellation_terrain_depth_ds.hlsl">
-      <Filter>Resource Files\Tessellation</Filter>
+      <Filter>Resource Files\Lighting\DepthPass</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>
