@@ -1,4 +1,5 @@
 #define N_LIGHTS 4
+#define HEIGHTMAP_SUB_SAMPLE 3.f
 
 Texture2D shaderTexture : register(t0);
 Texture2D heightMap : register(t1);
@@ -27,7 +28,6 @@ struct InputType
     float3 worldPosition : TEXCOORD1;
     float3 viewVector : TEXCOORD2;
     float4 lightViewPos[N_LIGHTS * 6] : TEXCOORD3;
-    //float4 depthPosition[N_LIGHTS * 6] : TEXCOORD27;
 };
 
 float getHeight(float2 uv)
@@ -42,20 +42,38 @@ float3 calculateHeightMapNormal(float2 uv)
 	//Get dimensions of texture to get the step per pixel
     uint texture_width, texture_height;
     heightMap.GetDimensions(texture_width, texture_height);
-    float u_step = 1.f / (float) texture_width;
-    float v_step = 1.f / (float) texture_height;
+    float u_step = HEIGHTMAP_SUB_SAMPLE / (float) texture_width;
+    float v_step = HEIGHTMAP_SUB_SAMPLE / (float) texture_height;
 
 	//Transform per pixel step to world step
     float wordlStep = 1.f * u_step / .01f; //regle de trois
 	
 	//From Frank Luna book
 	//Calculate the two tangents (tangent in x, bitangent in -z)
+    float3 normal[4]; //Calculate more normals to get rid of artefacts by averaging them
     float3 tX, tZ;
-    tX = normalize(float3(2.f * wordlStep, getHeight(float2(uv.x + u_step, uv.y)) - getHeight(float2(uv.x - u_step, uv.y)), 0.f));
-    tZ = normalize(float3(0.f, getHeight(float2(uv.x, uv.y + v_step)) - getHeight(float2(uv.x, uv.y - v_step)), -2.f * wordlStep));
+    
+    float top_height = getHeight(float2(uv.x, uv.y - v_step));
+    float bottom_height = getHeight(float2(uv.x, uv.y + v_step));
+    float left_height = getHeight(float2(uv.x - u_step, uv.y));
+    float right_height = getHeight(float2(uv.x + u_step, uv.y));
+
+    tX = normalize(float3(2.f * wordlStep, right_height - left_height, 0.f));
+    tZ = normalize(float3(0.f, bottom_height - top_height, -2.f * wordlStep));
+    normal[0] = cross(tX, tZ);
+    tX = normalize(float3(2.f * wordlStep, right_height - left_height, 0.f));
+    tZ = normalize(float3(0.f, top_height - bottom_height, 2.f * wordlStep));
+    normal[1] = cross(tZ, tX);
+    tX = normalize(float3(-2.f * wordlStep, left_height - right_height, 0.f));
+    tZ = normalize(float3(0.f, bottom_height - top_height, -2.f * wordlStep));
+    normal[2] = cross(tZ, tX);
+    tX = normalize(float3(-2.f * wordlStep, left_height - right_height, 0.f));
+    tZ = normalize(float3(0.f, top_height - bottom_height, 2.f * wordlStep));
+    normal[3] = cross(tX, tZ);
 	
 	//Assign normal
-    return cross(tX, tZ);
+    //return normal[0]; //Gives artefacts, instead, use the average
+    return normal[0] + normal[1] + normal[2] + normal[3] / 4.f;
 }
 
 float4 calculateSpecular(float3 lightDirection, float3 normal, float3 viewVector, float4 specularColour, float specularPower)

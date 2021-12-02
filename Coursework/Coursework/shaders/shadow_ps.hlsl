@@ -8,18 +8,14 @@ SamplerState shadowSampler : register(s1);
 
 cbuffer LightBuffer : register(b0)
 {
-	float4 ambient[N_LIGHTS];
-	float4 diffuse[N_LIGHTS];
-	float4 direction[N_LIGHTS];
-	int4 light_type[N_LIGHTS];
-	float4 lightPosition[N_LIGHTS];
-	float4 lightIntensity[N_LIGHTS];
-	float4 attenuation_factors[N_LIGHTS];
-	float4 spot_falloff[N_LIGHTS];
-	float4 spot_angle[N_LIGHTS];
-	float4 specular_power[N_LIGHTS];
-	float4 specular_colour[N_LIGHTS];
-	float4 shadow_bias[N_LIGHTS];					//shadow acne 0.f ; shadow seperation above 0.005f (like 0.05f)
+    float4 ambient[N_LIGHTS];
+    float4 diffuse[N_LIGHTS];
+    float4 direction[N_LIGHTS];
+    float4 lightPosition[N_LIGHTS];
+    float4 attenuation_factors[N_LIGHTS];
+    float4 specular_colour[N_LIGHTS];
+    float4 type_intensity_specularPower_shadowBias[N_LIGHTS];
+    float4 falloff_spotAngle_padding_padding[N_LIGHTS];
 };
 
 struct InputType
@@ -81,69 +77,79 @@ float4 main(InputType input) : SV_TARGET
 	float4 ambient_avg = float4(0.f, 0.f, 0.f, 0.f);
     int ambient_count = 0;
 	
-	for (int i = 0, mapID = 0; i < N_LIGHTS; ++i, mapID += 6)
-	{
+	[unroll]
+    for (int i = 0, mapID = 0; i < N_LIGHTS; ++i, mapID += 6)
+    {
+        //Decompress buffer data
+        int light_type = (int) type_intensity_specularPower_shadowBias[i].x;
+        float light_intensity = type_intensity_specularPower_shadowBias[i].y;
+        float light_specular_power = type_intensity_specularPower_shadowBias[i].z;
+        float light_shadow_bias = type_intensity_specularPower_shadowBias[i].w;
+        float spot_falloff = falloff_spotAngle_padding_padding[i].x;
+        float spot_angle = falloff_spotAngle_padding_padding[i].y;
+
 		//Calculate the distance between the pixel's normal and the light's position (used for pointlight and spotlight only)
-		float3 lightVector = lightPosition[i].xyz - input.worldPosition;
+        float3 lightVector = lightPosition[i].xyz - input.worldPosition;
 		
 		//Before normalising the light vector to a unit vector, use the length to calculate attenuation
-		float lightDistance = length(lightVector);
-		float attenuation = 1.f / (attenuation_factors[i].x + attenuation_factors[i].y * lightDistance + attenuation_factors[i].z * lightDistance * lightDistance);
+        float lightDistance = length(lightVector);
+        float attenuation = 1.f / (attenuation_factors[i].x + attenuation_factors[i].y * lightDistance + attenuation_factors[i].z * lightDistance * lightDistance);
 
-		lightVector = normalize(lightVector);
+        lightVector = normalize(lightVector);
 
 		//Calculate the cosAngle between the light's center direction and the vector to the pixel's position
-		float dotVal = dot(lightVector, normalize(-direction[i].xyz));
+        float dotVal = dot(lightVector, normalize(-direction[i].xyz));
 
 		//Trick by Erin to make the spotlight look nicer
-		float diff = dotVal - cos(3.1415f * spot_angle[i].x / 180.f);	// if( dotVal > cosSpotAngle ) then (dotVal - cosSotAngle) will be positive TODO: gui cosSpotAngle
-		diff = max(0.f, diff);											// if negative, not in light range (therefore set it to 0 for no lighting!)
-		diff *= spot_falloff[i].x;										// lets get most fractional vals
-		diff = min(1.f, diff);											// now all diff will be in [0,1] range. 0 is out of light, 1 is in light. 0 < x < 1 is in soft fall off
+        float diff = dotVal - cos(3.1415f * spot_angle / 180.f); // if( dotVal > cosSpotAngle ) then (dotVal - cosSotAngle) will be positive TODO: gui cosSpotAngle
+        diff = max(0.f, diff); // if negative, not in light range (therefore set it to 0 for no lighting!)
+        diff *= spot_falloff; // lets get most fractional vals
+        diff = min(1.f, diff); // now all diff will be in [0,1] range. 0 is out of light, 1 is in light. 0 < x < 1 is in soft fall off
 
         // Calculate the projected texture coordinates.
-		float2 pTexCoord = getProjectiveCoords(input.lightViewPos[mapID]);
+        float2 pTexCoord = getProjectiveCoords(input.lightViewPos[mapID]);
 	
 		//Check if coord is in bound and check if it is in shadow, if neither light the pixel
-		float validDepthData = (float)hasDepthData(pTexCoord);
-		float pixelInShadow = (float)!isInShadow(depthMapTexture[mapID], pTexCoord, input.lightViewPos[mapID], shadow_bias[i].x);
+        float validDepthData = (float) hasDepthData(pTexCoord);
+        float pixelInShadow = (float) !isInShadow(depthMapTexture[mapID], pTexCoord, input.lightViewPos[mapID], light_shadow_bias /*, input.depthPosition[mapID].z / input.depthPosition[mapID].w*/);
 
 		//Directional
-		colour += (light_type[i].x == 1) * validDepthData * pixelInShadow * calculateLighting(-direction[i].xyz, input.normal, diffuse[i], lightIntensity[i].x);
+        colour += (light_type == 1) * validDepthData * pixelInShadow * calculateLighting(-direction[i].xyz, input.normal, diffuse[i], light_intensity);
 		//Spot
-		colour += (light_type[i].x == 3) * validDepthData * pixelInShadow * calculateLighting(-direction[i].xyz, input.normal, diffuse[i], diff * lightIntensity[i].x) * attenuation;
+        colour += (light_type == 3) * validDepthData * pixelInShadow * calculateLighting(-direction[i].xyz, input.normal, diffuse[i], diff * light_intensity) * attenuation;
 		//Point
-		for (int j = 0; j < 6; ++j)
-		{
+        [unroll]
+        for (int j = 0; j < 6; ++j)
+        {
 			//NEED TO UPDATE THE TEXCOORD!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 			//Otherwise hasDepthData() will be wrong, only based on the first index (mapID)
-			pTexCoord = getProjectiveCoords(input.lightViewPos[mapID + j]);
+            pTexCoord = getProjectiveCoords(input.lightViewPos[mapID + j]);
 
-			float point_validDepthData = (float)hasDepthData(pTexCoord);
-			float point_pixelInShadow = (float)!isInShadow(depthMapTexture[mapID + j], pTexCoord, input.lightViewPos[mapID + j], shadow_bias[i].x);
+            float point_validDepthData = (float) hasDepthData(pTexCoord);
+            float point_pixelInShadow = (float) !isInShadow(depthMapTexture[mapID + j], pTexCoord, input.lightViewPos[mapID + j], light_shadow_bias /*, input.depthPosition[mapID + j].z / input.depthPosition[mapID + j].w*/);
 
-			colour += (light_type[i].x == 2) * point_validDepthData * point_pixelInShadow * calculateLighting(lightVector, input.normal, diffuse[i], lightIntensity[i].x) * attenuation;
+            colour += (light_type == 2) * point_validDepthData * point_pixelInShadow * calculateLighting(lightVector, input.normal, diffuse[i], light_intensity) * attenuation;
 
 			//Calculate specular value (zero'd if light type is OFF, or if the specular power is 0)
 			//The following specular is only calculated for point lights
-			specular_new_colour += (specular_power[i].x != 0.f) * (light_type[i].x == 2) * point_validDepthData * point_pixelInShadow * //
-				((light_type[i].x == 3) * diff + (light_type[i].x != 3)) *									//Make sure the specular doesnt happen outside of the spotlight area
-				(light_type[i].x != 0) * ((light_type[i].x != 1) * attenuation + (light_type[i] == 1)) *	//This second calculation either applies attenuation only on point and spot lights's specular
-				calculateSpecular((light_type[i].x == 1) * -direction[i].xyz + (light_type[i].x != 1) * lightVector, input.normal, input.viewVector, specular_colour[i], specular_power[i].x);
-		}
+            specular_new_colour += (light_specular_power != 0.f) * (light_type == 2) * point_validDepthData * point_pixelInShadow * //
+				((light_type == 3) * diff + (light_type != 3)) * //Make sure the specular doesnt happen outside of the spotlight area
+				(light_type != 0) * ((light_type != 1) * attenuation + (light_type == 1)) * //This second calculation either applies attenuation only on point and spot lights's specular
+				calculateSpecular((light_type == 1) * -direction[i].xyz + (light_type != 1) * lightVector, input.normal, input.viewVector, specular_colour[i], light_specular_power);
+        }
 		
 		//Calculate specular value (zero'd if light type is OFF, or if the specular power is 0)
 		//The following specular is only calculated for directional and spot lights
-		specular_new_colour += (specular_power[i].x != 0.f) * (light_type[i].x != 2) * validDepthData * pixelInShadow * //
-				((light_type[i].x == 3) * diff + (light_type[i].x != 3)) *									//Make sure the specular doesnt happen outside of the spotlight area
-				(light_type[i].x != 0) * ((light_type[i].x != 1) * attenuation + (light_type[i] == 1)) *	//This second calculation either applies attenuation only on point and spot lights's specular
-				calculateSpecular((light_type[i].x == 1) * -direction[i].xyz + (light_type[i].x != 1) * lightVector, input.normal, input.viewVector, specular_colour[i], specular_power[i].x);
+        specular_new_colour += (light_specular_power != 0.f) * (light_type != 2) * validDepthData * pixelInShadow * //
+				((light_type == 3) * diff + (light_type != 3)) * //Make sure the specular doesnt happen outside of the spotlight area
+				(light_type != 0) * ((light_type != 1) * attenuation + (light_type == 1)) * //This second calculation either applies attenuation only on point and spot lights's specular
+				calculateSpecular((light_type == 1) * -direction[i].xyz + (light_type != 1) * lightVector, input.normal, input.viewVector, specular_colour[i], light_specular_power);
 
-		ambient_avg += (light_type[i].x != 0) * ambient[i];
-		ambient_count += (light_type[i].x != 0);
-	}
+        ambient_avg += (light_type != 0) * ambient[i];
+        ambient_count += (light_type != 0);
+    }
     
-    ambient_avg /= (float)ambient_count;
-	colour = saturate(colour + ambient_avg);
-	return colour * texture_colour + specular_new_colour;
+    ambient_avg /= (float) ambient_count;
+    colour = saturate(colour + ambient_avg);
+    return colour * texture_colour + specular_new_colour;
 }
