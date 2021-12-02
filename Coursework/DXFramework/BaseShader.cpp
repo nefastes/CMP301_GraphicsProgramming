@@ -53,6 +53,17 @@ BaseShader::~BaseShader()
 // Given pre-compiled file, load and create vertex shader.
 void BaseShader::loadVertexShader(const wchar_t* filename)
 {
+	if (layout)
+	{
+		layout->Release();
+		layout = NULL;
+	}
+	if (vertexShader)
+	{
+		vertexShader->Release();
+		vertexShader = NULL;
+	}
+
 	ID3DBlob* vertexShaderBuffer;
 	
 	unsigned int numElements;
@@ -245,6 +256,12 @@ void BaseShader::loadColourVertexShader(const wchar_t* filename)
 // Given pre-compiled file, load and create pixel shader.
 void BaseShader::loadPixelShader(const wchar_t* filename)
 {
+	if (pixelShader)
+	{
+		pixelShader->Release();
+		pixelShader = NULL;
+	}
+
 	ID3DBlob* pixelShaderBuffer;
 
 	// check file extension for correct loading function.
@@ -289,6 +306,12 @@ void BaseShader::loadPixelShader(const wchar_t* filename)
 // Given pre-compiled file, load and create hull shader.
 void BaseShader::loadHullShader(const wchar_t* filename)
 {
+	if (hullShader)
+	{
+		hullShader->Release();
+		hullShader = NULL;
+	}
+
 	ID3D10Blob* hullShaderBuffer;
 	
 	// check file extension for correct loading function.
@@ -333,6 +356,12 @@ void BaseShader::loadHullShader(const wchar_t* filename)
 // Given pre-compiled file, load and create domain shader.
 void BaseShader::loadDomainShader(const wchar_t* filename)
 {
+	if (domainShader)
+	{
+		domainShader->Release();
+		domainShader = NULL;
+	}
+
 	ID3D10Blob* domainShaderBuffer;
 
 	// check file extension for correct loading function.

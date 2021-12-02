@@ -169,6 +169,7 @@
     <ClCompile Include="App1.cpp" />
     <ClCompile Include="DebugNormalsShader.cpp" />
     <ClCompile Include="DepthShader.cpp" />
+    <ClCompile Include="DepthTessShader.cpp" />
     <ClCompile Include="LightDebugShader.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="PlaneTessellationColourShader.cpp" />
@@ -182,6 +183,7 @@
     <ClInclude Include="App1.h" />
     <ClInclude Include="DebugNormalsShader.h" />
     <ClInclude Include="DepthShader.h" />
+    <ClInclude Include="DepthTessShader.h" />
     <ClInclude Include="LightDebugShader.h" />
     <ClInclude Include="PlaneTessellationColourShader.h" />
     <ClInclude Include="PlaneTessellationShader.h" />
@@ -222,6 +224,9 @@
     </FxCompile>
     <FxCompile Include="shaders\shadow_vs.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_terrain_depth_ds.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Domain</ShaderType>
     </FxCompile>
     <FxCompile Include="shaders\tessellation_terrain_ds.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Domain</ShaderType>

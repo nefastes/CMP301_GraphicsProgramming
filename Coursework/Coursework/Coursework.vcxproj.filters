@@ -93,6 +93,9 @@
     <ClCompile Include="PlaneTessellationTextureShader.cpp">
       <Filter>Source Files\Debug</Filter>
     </ClCompile>
+    <ClCompile Include="DepthTessShader.cpp">
+      <Filter>Source Files\Lighting</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App1.h">
@@ -124,6 +127,9 @@
     </ClInclude>
     <ClInclude Include="PlaneTessellationTextureShader.h">
       <Filter>Header Files\Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="DepthTessShader.h">
+      <Filter>Header Files\Lighting</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -201,6 +207,9 @@
     </FxCompile>
     <FxCompile Include="shaders\tessellation_texture_vs.hlsl">
       <Filter>Resource Files\Tessellation\Debug</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_terrain_depth_ds.hlsl">
+      <Filter>Resource Files\Tessellation</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

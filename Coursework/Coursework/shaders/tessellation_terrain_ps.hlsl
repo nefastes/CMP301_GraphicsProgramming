@@ -31,6 +31,7 @@ struct InputType
     float3 worldPosition : TEXCOORD1;
     float3 viewVector : TEXCOORD2;
     float4 lightViewPos[N_LIGHTS * 6] : TEXCOORD3;
+    //float4 depthPosition[N_LIGHTS * 6] : TEXCOORD27;
 };
 
 float getHeight(float2 uv)
@@ -82,9 +83,11 @@ bool hasDepthData(float2 uv)
     return !(uv.x < 0.f || uv.x > 1.f || uv.y < 0.f || uv.y > 1.f);
 }
 
-bool isInShadow(Texture2D sMap, float2 uv, float4 lightViewPosition, float bias)
+bool isInShadow(Texture2D sMap, float2 uv, float4 lightViewPosition, float bias/*, float input_depth*/)
 {
     // Sample the shadow map (get depth of geometry)
+    //Min the sample and the input_depth, which is the current depth value for the tessellated plane
+    //float depthValue = min(sMap.Sample(shadowSampler, uv).r, input_depth);
     float depthValue = sMap.Sample(shadowSampler, uv).r;
 	// Calculate the depth from the light.
     float lightDepthValue = lightViewPosition.z / lightViewPosition.w;
@@ -138,7 +141,7 @@ float4 main(InputType input) : SV_TARGET
 	
 		//Check if coord is in bound and check if it is in shadow, if neither light the pixel
         float validDepthData = (float) hasDepthData(pTexCoord);
-        float pixelInShadow = (float) !isInShadow(depthMapTexture[mapID], pTexCoord, input.lightViewPos[mapID], shadow_bias[i].x);
+        float pixelInShadow = (float) !isInShadow(depthMapTexture[mapID], pTexCoord, input.lightViewPos[mapID], shadow_bias[i].x/*, input.depthPosition[mapID].z / input.depthPosition[mapID].w*/);
 
 		//Directional
         colour += (light_type[i].x == 1) * validDepthData * pixelInShadow * calculateLighting(-direction[i].xyz, input_new_normal, diffuse[i], lightIntensity[i].x);
@@ -152,7 +155,7 @@ float4 main(InputType input) : SV_TARGET
             pTexCoord = getProjectiveCoords(input.lightViewPos[mapID + j]);
 
             float point_validDepthData = (float) hasDepthData(pTexCoord);
-            float point_pixelInShadow = (float) !isInShadow(depthMapTexture[mapID + j], pTexCoord, input.lightViewPos[mapID + j], shadow_bias[i].x);
+            float point_pixelInShadow = (float) !isInShadow(depthMapTexture[mapID + j], pTexCoord, input.lightViewPos[mapID + j], shadow_bias[i].x/*, input.depthPosition[mapID + j].z / input.depthPosition[mapID + j].w*/);
 
             colour += (light_type[i].x == 2) * point_validDepthData * point_pixelInShadow * calculateLighting(lightVector, input_new_normal, diffuse[i], lightIntensity[i].x) * attenuation;
 

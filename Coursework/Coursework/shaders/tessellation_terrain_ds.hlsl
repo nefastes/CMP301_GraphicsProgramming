@@ -35,8 +35,9 @@ struct OutputType
 	float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
 	float3 worldPosition : TEXCOORD1;
-	float3 viewVector : TEXCOORD2;
-	float4 lightViewPos[N_LIGHTS * 6] : TEXCOORD3;
+    float3 viewVector : TEXCOORD2;
+    float4 lightViewPos[N_LIGHTS * 6] : TEXCOORD3;
+    //float4 depthPosition[N_LIGHTS * 6] : TEXCOORD27;
 };
 
 float getHeight(float2 uv)
@@ -79,7 +80,10 @@ OutputType main(ConstantOutputType input, float2 uv : SV_DomainLocation, const O
 		output.lightViewPos[i] = mul(float4(vertexPosition, 1.f), worldMatrix);
 		output.lightViewPos[i] = mul(output.lightViewPos[i], lightViewMatrix[i]);
 		output.lightViewPos[i] = mul(output.lightViewPos[i], lightProjectionMatrix[i / 6]);
-	}
+
+		// Store the position value in a second input value for depth value calculations.
+        //output.depthPosition[i] = output.lightViewPos[i];
+    }
 
 	//Calculate the position of the vertex viewed by the camera
 	output.viewVector = patch[0].cameraPosition - output.worldPosition;

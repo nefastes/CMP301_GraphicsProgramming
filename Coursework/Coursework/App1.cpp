@@ -40,6 +40,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	// Init shaders
 	texture_shader = std::make_unique<TextureShader>(renderer->getDevice(), hwnd);
 	depth_shader = std::make_unique<DepthShader>(renderer->getDevice(), hwnd);
+	depth_tess_shader = std::make_unique<DepthTessShader>(renderer->getDevice(), hwnd);
 	shadow_shader = std::make_unique<ShadowShader>(renderer->getDevice(), hwnd);
 	light_debug_shader = std::make_unique<LightDebugShader>(renderer->getDevice(), hwnd);
 	tess_shader = std::make_unique<PlaneTessellationShader>(renderer->getDevice(), hwnd);
@@ -162,8 +163,9 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 	terrain->sendData(renderer->getDeviceContext());
 	if (renderDepth)
 	{
-		depth_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
-		depth_shader->render(renderer->getDeviceContext(), terrain->getIndexCount());
+		depth_tess_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
+			textureMgr->getTexture(L"heightMap"), gui_min_max_LOD, gui_min_max_distance, camera);
+		depth_tess_shader->render(renderer->getDeviceContext(), terrain->getIndexCount());
 	}
 	else
 	{
