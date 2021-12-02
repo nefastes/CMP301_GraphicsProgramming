@@ -1,8 +1,8 @@
 New coursework plan:
-	- finish tessellated plane with heightmap (depth shader with tessellation required) (could optmise dynamically assign GPU memory (can send less useless empty marices))
-	- do a simple post processing bloom
+	V finish tessellated plane with heightmap (could optmise dynamically assign GPU memory (can send less useless empty marices))
+	- do a simple post processing bloom (gloom?) OR dynamic cube maps???
 	- grass instanced on the geometry shader (not manipulated)
-	- do a wooblely bubble
+	- do a wooblely bubble (https://www.youtube.com/watch?v=EsgtGJsber0 , https://www.youtube.com/watch?v=F6t8LR2mX1I)
 	- cascaded shadow maps
 	- enhanced bloom
 	- bubble gun/cannon
