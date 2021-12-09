@@ -1,7 +1,7 @@
 #include "TerrainMesh.h"
 #define TERRAIN_X_LEN 32
 #define TERRAIN_Z_LEN 32
-#define TERRAIN_SCALE 100.f
+#define TERRAIN_SCALE 100.f	//Careful! Modifying this value needs adjustments on the Pixel Shader for the normal estimation
 
 TerrainMesh::TerrainMesh(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 {

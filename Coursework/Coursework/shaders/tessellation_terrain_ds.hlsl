@@ -15,6 +15,12 @@ cbuffer MatrixBuffer : register(b0)
 	matrix lightProjectionMatrix[N_LIGHTS];
 };
 
+cbuffer SettingsBuffer : register(b1)
+{
+    float height_amplitude;
+    float3 padding;
+};
+
 struct ConstantOutputType
 {
     float edges[4] : SV_TessFactor;
@@ -42,7 +48,7 @@ struct OutputType
 
 float getHeight(float2 uv)
 {
-    return heightMap.SampleLevel(Sampler, uv, 0).x * 20.f;
+    return heightMap.SampleLevel(Sampler, uv, 0).x * height_amplitude;
 }
 
 [domain("quad")]
@@ -90,7 +96,7 @@ OutputType main(ConstantOutputType input, float2 uv : SV_DomainLocation, const O
 	output.viewVector = normalize(output.viewVector);
 
     // Send the input tex into the pixel shader.
-	output.tex = texCoord;
+    output.tex = texCoord;
     
     // Send the input normal into the pixel shader.
 	output.normal = mul(patch[0].normal, (float3x3) worldMatrix);

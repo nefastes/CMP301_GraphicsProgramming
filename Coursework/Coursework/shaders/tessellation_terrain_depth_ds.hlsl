@@ -13,6 +13,12 @@ cbuffer MatrixBuffer : register(b0)
 	matrix projectionMatrix;
 };
 
+cbuffer SettingsBuffer : register(b1)
+{
+    float height_amplitude;
+    float3 padding;
+};
+
 struct ConstantOutputType
 {
     float edges[4] : SV_TessFactor;
@@ -38,7 +44,7 @@ struct OutputType
 
 float getHeight(float2 uv)
 {
-    return heightMap.SampleLevel(Sampler, uv, 0).x * 20.f;
+    return heightMap.SampleLevel(Sampler, uv, 0).x * height_amplitude;
 }
 
 [domain("quad")]

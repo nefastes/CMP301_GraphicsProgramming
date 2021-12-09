@@ -56,6 +56,7 @@ private:
 
 	//Models
 	std::unique_ptr<AModel> model;
+	std::unique_ptr<AModel> rock;
 
 	//Meshes
 	std::unique_ptr<OrthoMesh> orthomesh;
@@ -93,6 +94,8 @@ private:
 	//Gui tessellation
 	XMFLOAT2 gui_min_max_LOD;
 	XMFLOAT2 gui_min_max_distance;
+	XMFLOAT2 gui_terrain_texture_sacale;
+	float gui_terrain_height_amplitude;
 };
 
 #endif

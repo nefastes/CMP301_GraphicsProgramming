@@ -16,6 +16,17 @@ DepthTessShader::~DepthTessShader()
 		matrixBuffer = 0;
 	}
 
+	if (HsSettingsBuffer)
+	{
+		HsSettingsBuffer->Release();
+		HsSettingsBuffer = 0;
+	}
+	if (DsSettingsBuffer)
+	{
+		DsSettingsBuffer->Release();
+		DsSettingsBuffer = 0;
+	}
+
 	// Release the layout.
 	if (layout)
 	{
@@ -43,15 +54,25 @@ void DepthTessShader::initShader(const wchar_t* vsFilename, const wchar_t* psFil
 	matrixBufferDesc.StructureByteStride = 0;
 	renderer->CreateBuffer(&matrixBufferDesc, NULL, &matrixBuffer);
 
-	// Setup tessellation settings buffer
-	D3D11_BUFFER_DESC settingsBufferDesc;
-	settingsBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	settingsBufferDesc.ByteWidth = sizeof(SettingsBufferType);
-	settingsBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	settingsBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	settingsBufferDesc.MiscFlags = 0;
-	settingsBufferDesc.StructureByteStride = 0;
-	renderer->CreateBuffer(&settingsBufferDesc, NULL, &settingsBuffer);
+	// Setup tessellation HS settings buffer
+	D3D11_BUFFER_DESC HsSettingsBufferDesc;
+	HsSettingsBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	HsSettingsBufferDesc.ByteWidth = sizeof(HsSettingsBufferType);
+	HsSettingsBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	HsSettingsBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	HsSettingsBufferDesc.MiscFlags = 0;
+	HsSettingsBufferDesc.StructureByteStride = 0;
+	renderer->CreateBuffer(&HsSettingsBufferDesc, NULL, &HsSettingsBuffer);
+
+	// Setup tessellation DS settings buffer
+	D3D11_BUFFER_DESC DsSettingsBufferDesc;
+	DsSettingsBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	DsSettingsBufferDesc.ByteWidth = sizeof(DsSettingsBufferType);
+	DsSettingsBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	DsSettingsBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	DsSettingsBufferDesc.MiscFlags = 0;
+	DsSettingsBufferDesc.StructureByteStride = 0;
+	renderer->CreateBuffer(&DsSettingsBufferDesc, NULL, &DsSettingsBuffer);
 
 	// Create a texture sampler state description.
 	D3D11_SAMPLER_DESC samplerDesc;
@@ -73,7 +94,7 @@ void DepthTessShader::initShader(const wchar_t* vsFilename, const wchar_t* psFil
 }
 
 void DepthTessShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix,
-	ID3D11ShaderResourceView* heightMap, XMFLOAT2& minMaxLOD, XMFLOAT2& minMaxDistance, Camera* camera)
+	ID3D11ShaderResourceView* heightMap, XMFLOAT2& minMaxLOD, XMFLOAT2& minMaxDistance, float height_amplitude, Camera* camera)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -84,14 +105,14 @@ void DepthTessShader::setShaderParameters(ID3D11DeviceContext* deviceContext, co
 	XMMATRIX tproj = XMMatrixTranspose(projectionMatrix);
 
 	////HULL SHADER BUFFERS AND RESOURCES
-	result = deviceContext->Map(settingsBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	SettingsBufferType* settingsPtr = (SettingsBufferType*)mappedResource.pData;
+	result = deviceContext->Map(HsSettingsBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	HsSettingsBufferType* HsSettingsPtr = (HsSettingsBufferType*)mappedResource.pData;
 	XMFLOAT3 cameraPos = camera->getPosition();
-	settingsPtr->tessellationCenterPosition = XMFLOAT4(cameraPos.x, cameraPos.y, cameraPos.z, 1.f);
-	settingsPtr->minMaxLOD = minMaxLOD;
-	settingsPtr->minMaxDistance = minMaxDistance;
-	deviceContext->Unmap(settingsBuffer, 0);
-	deviceContext->HSSetConstantBuffers(0, 1, &settingsBuffer);
+	HsSettingsPtr->tessellationCenterPosition = XMFLOAT4(cameraPos.x, cameraPos.y, cameraPos.z, 1.f);
+	HsSettingsPtr->minMaxLOD = minMaxLOD;
+	HsSettingsPtr->minMaxDistance = minMaxDistance;
+	deviceContext->Unmap(HsSettingsBuffer, 0);
+	deviceContext->HSSetConstantBuffers(0, 1, &HsSettingsBuffer);
 
 	////DOMAIN SHADER BUFFERS AND RESOURCES
 	result = deviceContext->Map(matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
@@ -103,4 +124,11 @@ void DepthTessShader::setShaderParameters(ID3D11DeviceContext* deviceContext, co
 	deviceContext->DSSetConstantBuffers(0, 1, &matrixBuffer);
 	deviceContext->DSSetShaderResources(0, 1, &heightMap);
 	deviceContext->DSSetSamplers(0, 1, &sampleState);
+	//Settings buffer
+	result = deviceContext->Map(DsSettingsBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	DsSettingsBufferType* DsSettingsPtr = (DsSettingsBufferType*)mappedResource.pData;
+	DsSettingsPtr->height_amplitude = height_amplitude;
+	DsSettingsPtr->padding = XMFLOAT3(0.f, 0.f, 0.f);
+	deviceContext->Unmap(DsSettingsBuffer, 0);
+	deviceContext->DSSetConstantBuffers(1, 1, &DsSettingsBuffer);
 }

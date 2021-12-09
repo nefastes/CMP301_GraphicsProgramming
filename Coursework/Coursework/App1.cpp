@@ -3,7 +3,7 @@
 #include "App1.h"
 
 App1::App1() : gui_animate_objects(false), objects_roation_angle(0.f), gui_shadow_map_display_index(0), gui_min_max_LOD(1.f, 15.f), gui_min_max_distance(50.f, 75.f),
-gui_render_normals(false)
+gui_render_normals(false), gui_terrain_texture_sacale(XMFLOAT2(1.f, 1.f)), gui_terrain_height_amplitude(1.f)
 {
 	for (int i = 0; i < N_LIGHTS; ++i)
 	{
@@ -33,9 +33,11 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	BaseApplication::init(hinstance, hwnd, screenWidth, screenHeight, in, VSYNC, FULL_SCREEN);
 
 	// Load textures
-	textureMgr->loadTexture(L"heightMap", L"res/height.png");
+	textureMgr->loadTexture(L"heightMap", L"res/heightmap3.dds");
 	textureMgr->loadTexture(L"brick", L"res/brick1.dds");
 	textureMgr->loadTexture(L"wood", L"res/wood.png");
+	textureMgr->loadTexture(L"grass", L"res/grass_2.jpg");
+	textureMgr->loadTexture(L"model_rock_diffuse", L"res/models/rock_model_1/textures/Rock_1_Diffuse.jpg");
 
 	// Init shaders
 	texture_shader = std::make_unique<TextureShader>(renderer->getDevice(), hwnd);
@@ -83,11 +85,12 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 
 	//Init additional objects
 	mesh = std::make_unique<PlaneMesh>(renderer->getDevice(), renderer->getDeviceContext());
-	model = std::make_unique<AModel>(renderer->getDevice(), "res/teapot.obj");
 	cube = std::make_unique<CubeMesh>(renderer->getDevice(), renderer->getDeviceContext());
 	sphere = std::make_unique<SphereMesh>(renderer->getDevice(), renderer->getDeviceContext());
 	light_debug_sphere = std::make_unique<SphereMesh>(renderer->getDevice(), renderer->getDeviceContext());
 	terrain = std::make_unique<TerrainMesh>(renderer->getDevice(), renderer->getDeviceContext());
+	model = std::make_unique<AModel>(renderer->getDevice(), "res/teapot.obj");
+	rock = std::make_unique<AModel>(renderer->getDevice(), "res/models/rock_model_1/rock.obj");
 }
 
 App1::~App1()
@@ -164,13 +167,14 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 	if (renderDepth)
 	{
 		depth_tess_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
-			textureMgr->getTexture(L"heightMap"), gui_min_max_LOD, gui_min_max_distance, camera);
+			textureMgr->getTexture(L"heightMap"), gui_min_max_LOD, gui_min_max_distance, gui_terrain_height_amplitude, camera);
 		depth_tess_shader->render(renderer->getDeviceContext(), terrain->getIndexCount());
 	}
 	else
 	{
 		tess_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
-			textureMgr->getTexture(L"brick"), textureMgr->getTexture(L"heightMap"), gui_min_max_LOD, gui_min_max_distance, maps, light.data(), camera, gui_render_normals);
+			textureMgr->getTexture(L"grass"), textureMgr->getTexture(L"heightMap"), gui_min_max_LOD, gui_min_max_distance, gui_terrain_texture_sacale,
+			gui_terrain_height_amplitude, maps, light.data(), camera, gui_render_normals);
 		tess_shader->render(renderer->getDeviceContext(), terrain->getIndexCount());
 		/*if (gui_render_normals)	//Useless since normals are being recalculated per texel
 		{
@@ -180,7 +184,7 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 	}
 
 	//teapot
-	world = XMMatrixRotationAxis(XMVectorSet(0.f, 1.f, 0.f, 1.f), AI_DEG_TO_RAD(objects_roation_angle));
+	/*world = XMMatrixRotationAxis(XMVectorSet(0.f, 1.f, 0.f, 1.f), AI_DEG_TO_RAD(objects_roation_angle));
 	world = XMMatrixMultiply(world, XMMatrixTranslation(0.f, 7.f, 5.f));
 	world = XMMatrixMultiply(world, XMMatrixScaling(0.5f, 0.5f, 0.5f));
 	world = XMMatrixMultiply(world, XMMatrixRotationAxis(XMVectorSet(0.f, 1.f, 0.f, 1.f), AI_DEG_TO_RAD(objects_roation_angle)));
@@ -199,6 +203,27 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 		{
 			debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
 			debug_normals_shader->render(renderer->getDeviceContext(), model->getIndexCount());
+		}
+	}*/
+	world = XMMatrixRotationAxis(XMVectorSet(0.f, 1.f, 0.f, 1.f), AI_DEG_TO_RAD(objects_roation_angle));
+	world = XMMatrixMultiply(world, XMMatrixTranslation(0.f, 7.f, 5.f));
+	world = XMMatrixMultiply(world, XMMatrixScaling(0.5f, 0.5f, 0.5f));
+	world = XMMatrixMultiply(world, XMMatrixRotationAxis(XMVectorSet(0.f, 1.f, 0.f, 1.f), AI_DEG_TO_RAD(objects_roation_angle)));
+	rock->sendData(renderer->getDeviceContext());
+	if (renderDepth)
+	{
+		depth_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
+		depth_shader->render(renderer->getDeviceContext(), rock->getIndexCount());
+	}
+	else
+	{
+		shadow_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
+			textureMgr->getTexture(L"model_rock_diffuse"), maps, light.data(), camera);
+		shadow_shader->render(renderer->getDeviceContext(), rock->getIndexCount());
+		if (gui_render_normals)
+		{
+			debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
+			debug_normals_shader->render(renderer->getDeviceContext(), rock->getIndexCount());
 		}
 	}
 
@@ -373,6 +398,8 @@ void App1::gui()
 	ImGui::Text("Terrain Mesh Settings:");
 	ImGui::SliderFloat2("minMaxLOD", &gui_min_max_LOD.x, 0.f, 100.f);
 	ImGui::SliderFloat2("minMaxDistance", &gui_min_max_distance.x, 0.f, 200.f);
+	ImGui::SliderFloat2("Texture Scale", &gui_terrain_texture_sacale.x, .1f, 20.f);
+	ImGui::SliderFloat("Height Amplitude", &gui_terrain_height_amplitude, 0.f, 20.f);
 
 	ImGui::Separator();
 

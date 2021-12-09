@@ -30,11 +30,24 @@ class PlaneTessellationShader : public BaseShader
 		XMFLOAT4 falloff_spotAngle_renderNormals_padding[N_LIGHTS];
 	};
 
-	struct SettingsBufferType
+	struct HsSettingsBufferType
 	{
 		XMFLOAT4 tessellationCenterPosition;
 		XMFLOAT2 minMaxLOD;
 		XMFLOAT2 minMaxDistance;
+	};
+
+	struct DsSettingsBufferType
+	{
+		float height_amplitude;
+		XMFLOAT3 padding;
+	};
+
+	struct PsSettingsBufferType
+	{
+		XMFLOAT2 texture_scale;
+		float height_amplitude;
+		float padding;
 	};
 
 public:
@@ -43,8 +56,8 @@ public:
 	~PlaneTessellationShader();
 
 	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& projection,
-		ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* heightMap,
-		XMFLOAT2& minMaxLOD, XMFLOAT2& minMaxDistance, std::unique_ptr<ShadowMap>* maps, std::unique_ptr<Light>* light, Camera* camera, bool render_normals);
+		ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* heightMap, XMFLOAT2& minMaxLOD, XMFLOAT2& minMaxDistance, XMFLOAT2& tex_scale,
+		float height_amplitude, std::unique_ptr<ShadowMap>* maps, std::unique_ptr<Light>* light, Camera* camera, bool render_normals);
 
 private:
 	void initShader(const wchar_t* vsFilename, const wchar_t* psFilename);
@@ -54,6 +67,8 @@ private:
 	ID3D11SamplerState* sampleStateShadow;
 	ID3D11Buffer* matrixBuffer;
 	ID3D11Buffer* lightBuffer;
-	ID3D11Buffer* settingsBuffer;
+	ID3D11Buffer* HsSettingsBuffer;
+	ID3D11Buffer* DsSettingsBuffer;
+	ID3D11Buffer* PsSettingsBuffer;
 };
 

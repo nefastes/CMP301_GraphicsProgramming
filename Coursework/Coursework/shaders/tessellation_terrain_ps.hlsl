@@ -1,5 +1,6 @@
 #define N_LIGHTS 4
-#define HEIGHTMAP_SUB_SAMPLE 3.f
+#define TERRAIN_SCALE 100.f
+#define HEIGHTMAP_SUB_SAMPLE 1.f
 
 Texture2D shaderTexture : register(t0);
 Texture2D heightMap : register(t1);
@@ -20,6 +21,13 @@ cbuffer LightBuffer : register(b0)
     float4 falloff_spotAngle_renderNormals_padding[N_LIGHTS];
 };
 
+cbuffer SettingsBuffer : register(b1)
+{
+    float2 texture_scale;
+    float height_amplitude;
+    float padding;
+};
+
 struct InputType
 {
     float4 position : SV_POSITION;
@@ -32,12 +40,12 @@ struct InputType
 
 float getHeight(float2 uv)
 {
-    return heightMap.SampleLevel(diffuseSampler, uv, 0).x * 20.f;
+    return heightMap.SampleLevel(diffuseSampler, uv, 0).x * height_amplitude;
 }
 
-float3 calculateHeightMapNormal(float2 uv)
+float3 calculateHeightMapNormal(float3 input_position, float2 uv)
 {
-    ////Calculate new normal for this pixel
+    ////Estimate new normal for this pixel
 
 	//Get dimensions of texture to get the step per pixel
     uint texture_width, texture_height;
@@ -46,34 +54,30 @@ float3 calculateHeightMapNormal(float2 uv)
     float v_step = HEIGHTMAP_SUB_SAMPLE / (float) texture_height;
 
 	//Transform per pixel step to world step
-    float wordlStep = 1.f * u_step / .01f; //regle de trois
+    float worldStep = 1.f * u_step / (1.f / TERRAIN_SCALE); //regle de trois
 	
-	//From Frank Luna book
-	//Calculate the two tangents (tangent in x, bitangent in -z)
-    float3 normal[4]; //Calculate more normals to get rid of artefacts by averaging them
-    float3 tX, tZ;
+	//From Erin's explanation
+    //Start by calculating the heights for all surrounding neighbours vertices
+    float North_Height = getHeight(float2(uv.x, uv.y - v_step));
+    float South_Height = getHeight(float2(uv.x, uv.y + v_step));
+    float West_Height = getHeight(float2(uv.x - u_step, uv.y));
+    float East_Height = getHeight(float2(uv.x + u_step, uv.y));
     
-    float top_height = getHeight(float2(uv.x, uv.y - v_step));
-    float bottom_height = getHeight(float2(uv.x, uv.y + v_step));
-    float left_height = getHeight(float2(uv.x - u_step, uv.y));
-    float right_height = getHeight(float2(uv.x + u_step, uv.y));
-
-    tX = normalize(float3(2.f * wordlStep, right_height - left_height, 0.f));
-    tZ = normalize(float3(0.f, bottom_height - top_height, -2.f * wordlStep));
-    normal[0] = cross(tX, tZ);
-    tX = normalize(float3(2.f * wordlStep, right_height - left_height, 0.f));
-    tZ = normalize(float3(0.f, top_height - bottom_height, 2.f * wordlStep));
-    normal[1] = cross(tZ, tX);
-    tX = normalize(float3(-2.f * wordlStep, left_height - right_height, 0.f));
-    tZ = normalize(float3(0.f, bottom_height - top_height, -2.f * wordlStep));
-    normal[2] = cross(tZ, tX);
-    tX = normalize(float3(-2.f * wordlStep, left_height - right_height, 0.f));
-    tZ = normalize(float3(0.f, top_height - bottom_height, 2.f * wordlStep));
-    normal[3] = cross(tX, tZ);
-	
-	//Assign normal
-    //return normal[0]; //Gives artefacts, instead, use the average
-    return normal[0] + normal[1] + normal[2] + normal[3] / 4.f;
+    //Get the position of the neighbours vertices
+    float3 North = float3(input_position.x, North_Height, input_position.z - worldStep);
+    float3 East = float3(input_position.x + worldStep, East_Height, input_position.z);
+    float3 South = float3(input_position.x, South_Height, input_position.z + worldStep);
+    float3 West = float3(input_position.x - worldStep, West_Height, input_position.z);
+    
+    //Calculate the two tangents (tangent in x, bitangent in -z)
+    //The tangents are estimated by making vectors between neighbours in the given axis
+    //Make sure to normalize them for the cross product
+    float3 tangentX = normalize(East - West);
+    float3 tangentZ = normalize(North - South);
+    
+    //The normal is a simple cross product of both tangents
+    float3 normal = cross(tangentX, tangentZ);
+    return normal;
 }
 
 float4 calculateSpecular(float3 lightDirection, float3 normal, float3 viewVector, float4 specularColour, float specularPower)
@@ -123,12 +127,12 @@ float4 main(InputType input) : SV_TARGET
 {
     float4 colour = float4(0.f, 0.f, 0.f, 0.f);
     float4 specular_new_colour = float4(0.f, 0.f, 0.f, 0.f);
-    float4 texture_colour = shaderTexture.Sample(diffuseSampler, input.tex);
+    float4 texture_colour = shaderTexture.Sample(diffuseSampler, input.tex * texture_scale);
     float4 ambient_avg = float4(0.f, 0.f, 0.f, 0.f);
     int ambient_count = 0;
 
     //Calculate the new normal of the terrain per texel
-    float3 input_new_normal = calculateHeightMapNormal(input.tex);
+    float3 input_new_normal = calculateHeightMapNormal(input.position.xyz, input.tex);
     //If we render normals, output it as a colour
     if ((bool) falloff_spotAngle_renderNormals_padding[0].z) return float4(input_new_normal, 1.f);
 	
