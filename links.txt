@@ -1,12 +1,16 @@
 ////MODELS
 
 //rock_model_1
-https://www.turbosquid.com/3d-models/3d-stone-rock-1695868
+https://www.turbosquid.com/3d-models/3d-stone-rock-1695868 (9/12)
 
-//
+//bench
+https://free3d.com/3d-model/old-dirty-bench-83386.html (15/12)
+
+//lamp
+https://www.turbosquid.com/3d-models/3d-model-victorian-street-light/877825 (15/12)
 
 
 
 ////TEXTURES
 //grass_2
-https://3djungle.net/textures/grass/1418/
+https://3djungle.net/textures/grass/1418/ (9/12)

@@ -2,8 +2,8 @@
 // Lab 1 example, simple coloured triangle mesh
 #include "App1.h"
 
-App1::App1() : gui_animate_objects(false), objects_roation_angle(0.f), gui_shadow_map_display_index(0), gui_min_max_LOD(1.f, 15.f), gui_min_max_distance(50.f, 75.f),
-gui_render_normals(false), gui_terrain_texture_sacale(XMFLOAT2(1.f, 1.f)), gui_terrain_height_amplitude(1.f)
+App1::App1() : gui_shadow_map_display_index(0), gui_min_max_LOD(1.f, 15.f), gui_min_max_distance(50.f, 75.f),
+gui_render_normals(false), gui_terrain_texture_sacale(XMFLOAT2(20.f, 20.f)), gui_terrain_height_amplitude(5.f)
 {
 	for (int i = 0; i < N_LIGHTS; ++i)
 	{
@@ -25,6 +25,10 @@ gui_render_normals(false), gui_terrain_texture_sacale(XMFLOAT2(1.f, 1.f)), gui_t
 		gui_light_shadow_bias[i] = 0.004f;
 	}
 	gui_light_type[0] = 1;	//Only the first light is on by default
+	gui_light_direction[0] = XMFLOAT3(.25f, -.125f, .7f);
+	gui_light_position[0] = XMFLOAT3(-50.f, 30.f, -125.f);
+	gui_light_frustum[0] = XMFLOAT2(45.f, 225.f);
+	gui_light_diffuse_colour[0] = XMFLOAT4(.995f, .586f, .0f, 1.f);
 }
 
 void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeight, Input *in, bool VSYNC, bool FULL_SCREEN)
@@ -40,6 +44,9 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	textureMgr->loadTexture(L"model_rock_diffuse", L"res/models/rock_model_1/textures/Rock_1_Diffuse.jpg");
 	textureMgr->loadTexture(L"model_rock_height", L"res/models/rock_model_1/textures/Rock_1_Glossiness.jpg");
 	textureMgr->loadTexture(L"model_rock_normal", L"res/models/rock_model_1/textures/Rock_1_Normal.jpg");
+	textureMgr->loadTexture(L"model_bench_diffuse", L"res/models/bench/benchs_diffuse.png");
+	textureMgr->loadTexture(L"model_bench_normal", L"res/models/bench/benchs_normal.png");
+	textureMgr->loadTexture(L"model_lamp_diffuse", L"res/models/lamp2/diffuse.png");
 
 	// Init shaders
 	texture_shader = std::make_unique<TextureShader>(renderer->getDevice(), hwnd);
@@ -85,11 +92,11 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	orthomesh = std::make_unique<OrthoMesh>(renderer->getDevice(), renderer->getDeviceContext(), screenWidth / 4, screenHeight / 4, screenWidth / 3, screenHeight / 3);
 
 	//Init additional objects
-	cube = std::make_unique<CubeMesh>(renderer->getDevice(), renderer->getDeviceContext());
-	sphere = std::make_unique<SphereMesh>(renderer->getDevice(), renderer->getDeviceContext());
 	light_debug_sphere = std::make_unique<SphereMesh>(renderer->getDevice(), renderer->getDeviceContext());
 	terrain = std::make_unique<TerrainMesh>(renderer->getDevice(), renderer->getDeviceContext());
 	rock = std::make_unique<AModel>(renderer->getDevice(), "res/models/rock_model_1/rock.obj");
+	bench = std::make_unique<AModel>(renderer->getDevice(), "res/models/bench/bench.obj");
+	lamp = std::make_unique<AModel>(renderer->getDevice(), "res/models/lamp2/vsl.obj");
 }
 
 App1::~App1()
@@ -112,8 +119,7 @@ bool App1::frame()
 		return false;
 	}
 	//other updates
-	objects_roation_angle += (float)gui_animate_objects * 10.f * timer->getTime();
-	objects_roation_angle -= (objects_roation_angle > 360.f) * 360.f;
+
 	
 	// Render the graphics.
 	result = render();
@@ -158,11 +164,10 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 		terrain_tess_shader->render(renderer->getDeviceContext(), terrain->getIndexCount());
 	}
 
-	//Rock
-	world = XMMatrixRotationAxis(XMVectorSet(0.f, 1.f, 0.f, 1.f), AI_DEG_TO_RAD(objects_roation_angle));
-	world = XMMatrixMultiply(world, XMMatrixTranslation(0.f, 7.f, 5.f));
-	world = XMMatrixMultiply(world, XMMatrixScaling(0.5f, 0.5f, 0.5f));
-	world = XMMatrixMultiply(world, XMMatrixRotationAxis(XMVectorSet(0.f, 1.f, 0.f, 1.f), AI_DEG_TO_RAD(objects_roation_angle)));
+	//Rocks
+	world = XMMatrixRotationAxis(XMVectorSet(1.f, 0.f, 0.f, 1.f), AI_DEG_TO_RAD(90.f));
+	world = XMMatrixMultiply(world, XMMatrixScaling(0.25f, 0.25f, 0.25f));
+	world = XMMatrixMultiply(world, XMMatrixTranslation(0.f, -20.f, 5.f));
 	rock->sendData(renderer->getDeviceContext());
 	if (renderDepth)
 	{
@@ -171,11 +176,28 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 	}
 	else
 	{
-		model_tess_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
-			textureMgr->getTexture(L"model_rock_diffuse"), textureMgr->getTexture(L"model_rock_height"), textureMgr->getTexture(L"model_rock_normal"),
-			gui_min_max_LOD, gui_min_max_distance, gui_terrain_texture_sacale,
-			gui_terrain_height_amplitude, maps, light.data(), camera, gui_render_normals);
-		model_tess_shader->render(renderer->getDeviceContext(), rock->getIndexCount());
+		shadow_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
+			textureMgr->getTexture(L"model_rock_diffuse"),  maps, light.data(), camera);
+		shadow_shader->render(renderer->getDeviceContext(), rock->getIndexCount());
+		if (gui_render_normals)
+		{
+			debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
+			debug_normals_shader->render(renderer->getDeviceContext(), rock->getIndexCount());
+		}
+	}
+	world = XMMatrixScaling(0.25f, 0.25f, 0.25f);
+	world = XMMatrixMultiply(world, XMMatrixTranslation(10.f, -20.f, 15.f));
+	rock->sendData(renderer->getDeviceContext());
+	if (renderDepth)
+	{
+		depth_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
+		depth_shader->render(renderer->getDeviceContext(), rock->getIndexCount());
+	}
+	else
+	{
+		shadow_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
+			textureMgr->getTexture(L"model_rock_diffuse"), maps, light.data(), camera);
+		shadow_shader->render(renderer->getDeviceContext(), rock->getIndexCount());
 		if (gui_render_normals)
 		{
 			debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
@@ -183,45 +205,45 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 		}
 	}
 
-	//cube
-	world = XMMatrixRotationAxis(XMVectorSet(0.f, 1.f, 0.f, 1.f), AI_DEG_TO_RAD(objects_roation_angle));
-	world = XMMatrixMultiply(world, XMMatrixTranslation(15.f, 1.f, 5.f));
-	world = XMMatrixMultiply(world, XMMatrixRotationAxis(XMVectorSet(0.f, 1.f, 0.f, 1.f), AI_DEG_TO_RAD(objects_roation_angle)));
-	cube->sendData(renderer->getDeviceContext());
+	//Bench
+	world = XMMatrixScaling(0.125f, 0.125f, 0.125f);
+	//world = XMMatrixMultiply(world, XMMatrixTranslation(10.f, -20.f, 15.f));
+	bench->sendData(renderer->getDeviceContext());
 	if (renderDepth)
 	{
 		depth_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
-		depth_shader->render(renderer->getDeviceContext(), cube->getIndexCount());
+		depth_shader->render(renderer->getDeviceContext(), bench->getIndexCount());
 	}
 	else
 	{
 		shadow_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
-			textureMgr->getTexture(L"wood"), maps, light.data(), camera);
-		shadow_shader->render(renderer->getDeviceContext(), cube->getIndexCount());
+			textureMgr->getTexture(L"model_bench_diffuse"), maps, light.data(), camera);
+		shadow_shader->render(renderer->getDeviceContext(), bench->getIndexCount());
 		if (gui_render_normals)
 		{
 			debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
-			debug_normals_shader->render(renderer->getDeviceContext(), cube->getIndexCount());
+			debug_normals_shader->render(renderer->getDeviceContext(), bench->getIndexCount());
 		}
 	}
 
-	//sphere
-	world = XMMatrixMultiply(world, XMMatrixTranslation(0.f, 0.f, 5.f));
-	sphere->sendData(renderer->getDeviceContext());
+	//Lamp
+	world = XMMatrixScaling(0.125f, 0.125f, 0.125f);
+	world = XMMatrixMultiply(world, XMMatrixTranslation(10.f, 0.f, 0.f));
+	lamp->sendData(renderer->getDeviceContext());
 	if (renderDepth)
 	{
 		depth_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
-		depth_shader->render(renderer->getDeviceContext(), sphere->getIndexCount());
+		depth_shader->render(renderer->getDeviceContext(), lamp->getIndexCount());
 	}
 	else
 	{
 		shadow_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
-			textureMgr->getTexture(L"wood"), maps, light.data(), camera);
-		shadow_shader->render(renderer->getDeviceContext(), sphere->getIndexCount());
+			textureMgr->getTexture(L"model_lamp_diffuse"), maps, light.data(), camera);
+		shadow_shader->render(renderer->getDeviceContext(), lamp->getIndexCount());
 		if (gui_render_normals)
 		{
 			debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
-			debug_normals_shader->render(renderer->getDeviceContext(), sphere->getIndexCount());
+			debug_normals_shader->render(renderer->getDeviceContext(), lamp->getIndexCount());
 		}
 	}
 }
@@ -340,7 +362,6 @@ void App1::gui()
 	// Build UI
 	ImGui::Text("FPS: %.2f", timer->getFPS());
 	ImGui::Checkbox("Wireframe mode", &wireframeToggle);
-	ImGui::Checkbox("Animate Objects", &gui_animate_objects);
 	ImGui::Checkbox("Render Normals", &gui_render_normals);
 
 	ImGui::Separator();

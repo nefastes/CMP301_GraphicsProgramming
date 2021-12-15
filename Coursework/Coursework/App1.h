@@ -54,17 +54,15 @@ private:
 
 	//Models
 	std::unique_ptr<AModel> rock;
+	std::unique_ptr<AModel> bench;
+	std::unique_ptr<AModel> lamp;
 
 	//Meshes
 	std::unique_ptr<OrthoMesh> orthomesh;
-	std::unique_ptr<CubeMesh> cube;
-	std::unique_ptr<SphereMesh> sphere;
 	std::unique_ptr<SphereMesh> light_debug_sphere;
 	std::unique_ptr<TerrainMesh> terrain;
-	float objects_roation_angle;
 
 	//General guis
-	bool gui_animate_objects;
 	bool gui_render_normals;
 
 	//up to MAX_N_LIGHTS lights, gui for the light properties 
