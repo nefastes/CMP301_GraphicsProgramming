@@ -275,7 +275,7 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 	//}
 
 	//Totoro
-	world = XMMatrixScaling(15.f, 15.f, 15.f);
+	world = XMMatrixScaling(12.f, 12.f, 12.f);
 	world = XMMatrixMultiply(world, XMMatrixTranslation(0.f, -20.f, 13.f));
 	model_totoro->sendData(renderer->getDeviceContext());
 	if (renderDepth)
