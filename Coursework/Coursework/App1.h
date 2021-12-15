@@ -40,7 +40,7 @@ private:
 	void renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique_ptr<ShadowMap>* map, bool renderDepth);
 
 	//Shaders
-	std::unique_ptr<ShadowShader> shadow_shader;
+	std::unique_ptr<ShadowShader> light_shader;
 	std::unique_ptr<DepthShader> depth_shader;
 	std::unique_ptr<DepthTessShader> depth_tess_shader;
 	std::unique_ptr<LightDebugShader> light_debug_shader;
@@ -53,14 +53,16 @@ private:
 	std::array<std::unique_ptr<ShadowMap>, N_LIGHTS * 6> shadowmap;	//Create 6 * N_LIGHTS if all of them are point lights
 
 	//Models
-	std::unique_ptr<AModel> rock;
-	std::unique_ptr<AModel> bench;
-	std::unique_ptr<AModel> lamp;
+	std::unique_ptr<AModel> model_mei;
+	std::unique_ptr<AModel> model_totoro;
+	std::unique_ptr<AModel> model_rock;
+	std::unique_ptr<AModel> model_bench;
+	std::unique_ptr<AModel> model_lamp;
 
 	//Meshes
-	std::unique_ptr<OrthoMesh> orthomesh;
-	std::unique_ptr<SphereMesh> light_debug_sphere;
-	std::unique_ptr<TerrainMesh> terrain;
+	std::unique_ptr<OrthoMesh> mesh_orthomesh;
+	std::unique_ptr<SphereMesh> mesh_light_debug_sphere;
+	std::unique_ptr<TerrainMesh> mesh_terrain;
 
 	//General guis
 	bool gui_render_normals;
