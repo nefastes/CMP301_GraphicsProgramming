@@ -175,6 +175,7 @@
     <ClCompile Include="PlaneTessellationColourShader.cpp" />
     <ClCompile Include="PlaneTessellationShader.cpp" />
     <ClCompile Include="PlaneTessellationTextureShader.cpp" />
+    <ClCompile Include="ModelTessellationShader.cpp" />
     <ClCompile Include="ShadowShader.cpp" />
     <ClCompile Include="TerrainMesh.cpp" />
     <ClCompile Include="TextureShader.cpp" />
@@ -188,6 +189,7 @@
     <ClInclude Include="PlaneTessellationColourShader.h" />
     <ClInclude Include="PlaneTessellationShader.h" />
     <ClInclude Include="PlaneTessellationTextureShader.h" />
+    <ClInclude Include="ModelTessellationShader.h" />
     <ClInclude Include="ShadowShader.h" />
     <ClInclude Include="TerrainMesh.h" />
     <ClInclude Include="TextureShader.h" />
@@ -223,6 +225,18 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
     </FxCompile>
     <FxCompile Include="shaders\shadow_vs.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_model_ds.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Domain</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_model_fodd_hs.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Hull</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_model_ps.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_model_vs.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
     </FxCompile>
     <FxCompile Include="shaders\tessellation_terrain_depth_ds.hlsl">

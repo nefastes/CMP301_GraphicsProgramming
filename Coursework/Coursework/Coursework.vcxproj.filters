@@ -58,6 +58,12 @@
     <Filter Include="Resource Files\Tessellation\Debug">
       <UniqueIdentifier>{104b0352-7e85-4f66-a7b7-3332ee180634}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\Tessellation\Terrain">
+      <UniqueIdentifier>{81b387e1-a331-48f5-9847-5e4776dd293c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Tessellation\Model">
+      <UniqueIdentifier>{6252e9d6-c62a-46aa-91ca-d2c12000e99f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -96,6 +102,9 @@
     <ClCompile Include="DepthTessShader.cpp">
       <Filter>Source Files\Lighting</Filter>
     </ClCompile>
+    <ClCompile Include="ModelTessellationShader.cpp">
+      <Filter>Source Files\Tessellation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App1.h">
@@ -130,6 +139,9 @@
     </ClInclude>
     <ClInclude Include="DepthTessShader.h">
       <Filter>Header Files\Lighting</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelTessellationShader.h">
+      <Filter>Header Files\Tessellation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -166,12 +178,6 @@
     <FxCompile Include="shaders\debug_normals_vs.hlsl">
       <Filter>Resource Files\Debug</Filter>
     </FxCompile>
-    <FxCompile Include="shaders\tessellation_terrain_ps.hlsl">
-      <Filter>Resource Files\Tessellation</Filter>
-    </FxCompile>
-    <FxCompile Include="shaders\tessellation_terrain_vs.hlsl">
-      <Filter>Resource Files\Tessellation</Filter>
-    </FxCompile>
     <FxCompile Include="shaders\tessellation_colour_vs.hlsl">
       <Filter>Resource Files\Tessellation\Debug</Filter>
     </FxCompile>
@@ -183,18 +189,6 @@
     </FxCompile>
     <FxCompile Include="shaders\tessellation_colour_ps.hlsl">
       <Filter>Resource Files\Tessellation\Debug</Filter>
-    </FxCompile>
-    <FxCompile Include="shaders\tessellation_terrain_feven_hs.hlsl">
-      <Filter>Resource Files\Tessellation</Filter>
-    </FxCompile>
-    <FxCompile Include="shaders\tessellation_terrain_fodd_hs.hlsl">
-      <Filter>Resource Files\Tessellation</Filter>
-    </FxCompile>
-    <FxCompile Include="shaders\tessellation_terrain_integer_hs.hlsl">
-      <Filter>Resource Files\Tessellation</Filter>
-    </FxCompile>
-    <FxCompile Include="shaders\tessellation_terrain_ds.hlsl">
-      <Filter>Resource Files\Tessellation</Filter>
     </FxCompile>
     <FxCompile Include="shaders\tessellation_texture_ds.hlsl">
       <Filter>Resource Files\Tessellation\Debug</Filter>
@@ -210,6 +204,36 @@
     </FxCompile>
     <FxCompile Include="shaders\tessellation_terrain_depth_ds.hlsl">
       <Filter>Resource Files\Lighting\DepthPass</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_terrain_vs.hlsl">
+      <Filter>Resource Files\Tessellation\Terrain</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_terrain_ds.hlsl">
+      <Filter>Resource Files\Tessellation\Terrain</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_terrain_feven_hs.hlsl">
+      <Filter>Resource Files\Tessellation\Terrain</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_terrain_fodd_hs.hlsl">
+      <Filter>Resource Files\Tessellation\Terrain</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_terrain_integer_hs.hlsl">
+      <Filter>Resource Files\Tessellation\Terrain</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_terrain_ps.hlsl">
+      <Filter>Resource Files\Tessellation\Terrain</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_model_ds.hlsl">
+      <Filter>Resource Files\Tessellation\Model</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_model_fodd_hs.hlsl">
+      <Filter>Resource Files\Tessellation\Model</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_model_ps.hlsl">
+      <Filter>Resource Files\Tessellation\Model</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\tessellation_model_vs.hlsl">
+      <Filter>Resource Files\Tessellation\Model</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

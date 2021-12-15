@@ -13,8 +13,7 @@
 #include "LightDebugShader.h"
 #include "DebugNormalsShader.h"
 #include "PlaneTessellationShader.h"
-#include "PlaneTessellationColourShader.h"
-#include "PlaneTessellationTextureShader.h"
+#include "ModelTessellationShader.h"
 
 #include "TerrainMesh.h"
 
@@ -45,9 +44,8 @@ private:
 	std::unique_ptr<DepthShader> depth_shader;
 	std::unique_ptr<DepthTessShader> depth_tess_shader;
 	std::unique_ptr<LightDebugShader> light_debug_shader;
-	std::unique_ptr<PlaneTessellationShader> tess_shader;
-	std::unique_ptr<PlaneTessellationColourShader> tess_shader_2;
-	std::unique_ptr<PlaneTessellationTextureShader> tess_shader_3;
+	std::unique_ptr<PlaneTessellationShader> terrain_tess_shader;
+	std::unique_ptr<ModelTessellationShader> model_tess_shader;
 	std::unique_ptr<TextureShader> texture_shader;
 	std::unique_ptr<DebugNormalsShader> debug_normals_shader;
 
@@ -55,12 +53,10 @@ private:
 	std::array<std::unique_ptr<ShadowMap>, N_LIGHTS * 6> shadowmap;	//Create 6 * N_LIGHTS if all of them are point lights
 
 	//Models
-	std::unique_ptr<AModel> model;
 	std::unique_ptr<AModel> rock;
 
 	//Meshes
 	std::unique_ptr<OrthoMesh> orthomesh;
-	std::unique_ptr<PlaneMesh> mesh;
 	std::unique_ptr<CubeMesh> cube;
 	std::unique_ptr<SphereMesh> sphere;
 	std::unique_ptr<SphereMesh> light_debug_sphere;

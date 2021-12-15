@@ -28,14 +28,6 @@ void TerrainMesh::sendData(ID3D11DeviceContext* deviceContext, D3D_PRIMITIVE_TOP
 	deviceContext->IASetPrimitiveTopology(top);
 }
 
-int TerrainMesh::clamp(int n, int lower, int upper)
-{
-	//if n < lower return lower
-	//if n > upper return upper
-	//else return n
-	return (n < lower) * lower + (n > upper) * upper + (n >= lower && n <= upper) * n;
-}
-
 #define book_clamp(value, minimum, maximum) (max( min( (value), (maximum) ), (minimum) ))
 void TerrainMesh::initBuffers(ID3D11Device* device)
 {
@@ -66,6 +58,12 @@ void TerrainMesh::initBuffers(ID3D11Device* device)
 	}
 
 	//Create index buffer
+	auto clamp = [](int n, int lower, int upper) -> int {
+		//if n < lower return lower
+		//if n > upper return upper
+		//else return n
+		return (n < lower) * lower + (n > upper) * upper + (n >= lower && n <= upper) * n;
+	};
 	int index = 0;
 	for (int x = 0; x < TERRAIN_X_LEN; ++x)
 	{
@@ -80,20 +78,20 @@ void TerrainMesh::initBuffers(ID3D11Device* device)
 			indices[index + 3] = (z + 1) + (x + 1) * (TERRAIN_X_LEN + 1);
 
 			//4-5 are +x
-			indices[index + 4] = book_clamp(z + 0, 0, TERRAIN_Z_LEN) + book_clamp(x + 2, 0, TERRAIN_X_LEN) * (TERRAIN_X_LEN + 1);
-			indices[index + 5] = book_clamp(z + 1, 0, TERRAIN_Z_LEN) + book_clamp(x + 2, 0, TERRAIN_X_LEN) * (TERRAIN_X_LEN + 1);
+			indices[index + 4] = clamp(z + 0, 0, TERRAIN_Z_LEN) + clamp(x + 2, 0, TERRAIN_X_LEN) * (TERRAIN_X_LEN + 1);
+			indices[index + 5] = clamp(z + 1, 0, TERRAIN_Z_LEN) + clamp(x + 2, 0, TERRAIN_X_LEN) * (TERRAIN_X_LEN + 1);
 
 			//6-7 are +z
-			indices[index + 6] = book_clamp(z + 2, 0, TERRAIN_Z_LEN) + book_clamp(x + 0, 0, TERRAIN_X_LEN) * (TERRAIN_X_LEN + 1);
-			indices[index + 7] = book_clamp(z + 2, 0, TERRAIN_Z_LEN) + book_clamp(x + 1, 0, TERRAIN_X_LEN) * (TERRAIN_X_LEN + 1);
+			indices[index + 6] = clamp(z + 2, 0, TERRAIN_Z_LEN) + clamp(x + 0, 0, TERRAIN_X_LEN) * (TERRAIN_X_LEN + 1);
+			indices[index + 7] = clamp(z + 2, 0, TERRAIN_Z_LEN) + clamp(x + 1, 0, TERRAIN_X_LEN) * (TERRAIN_X_LEN + 1);
 
 			//8-9 are -x
-			indices[index + 8] = book_clamp(z + 0, 0, TERRAIN_Z_LEN) + book_clamp(x - 1, 0, TERRAIN_X_LEN) * (TERRAIN_X_LEN + 1);
-			indices[index + 9] = book_clamp(z + 1, 0, TERRAIN_Z_LEN) + book_clamp(x - 1, 0, TERRAIN_X_LEN) * (TERRAIN_X_LEN + 1);
+			indices[index + 8] = clamp(z + 0, 0, TERRAIN_Z_LEN) + clamp(x - 1, 0, TERRAIN_X_LEN) * (TERRAIN_X_LEN + 1);
+			indices[index + 9] = clamp(z + 1, 0, TERRAIN_Z_LEN) + clamp(x - 1, 0, TERRAIN_X_LEN) * (TERRAIN_X_LEN + 1);
 
 			//10-11 are -z
-			indices[index + 10] = book_clamp(z - 1, 0, TERRAIN_Z_LEN) + book_clamp(x + 0, 0, TERRAIN_X_LEN) * (TERRAIN_X_LEN + 1);
-			indices[index + 11] = book_clamp(z - 1, 0, TERRAIN_Z_LEN) + book_clamp(x + 1, 0, TERRAIN_X_LEN) * (TERRAIN_X_LEN + 1);
+			indices[index + 10] = clamp(z - 1, 0, TERRAIN_Z_LEN) + clamp(x + 0, 0, TERRAIN_X_LEN) * (TERRAIN_X_LEN + 1);
+			indices[index + 11] = clamp(z - 1, 0, TERRAIN_Z_LEN) + clamp(x + 1, 0, TERRAIN_X_LEN) * (TERRAIN_X_LEN + 1);
 		}
 	}
 
