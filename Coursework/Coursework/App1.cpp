@@ -24,11 +24,19 @@ gui_render_normals(false), gui_terrain_texture_sacale(XMFLOAT2(20.f, 20.f)), gui
 		gui_light_specular_colour[i] = XMFLOAT4(1.f, 1.f, 1.f, 1.f);
 		gui_light_shadow_bias[i] = 0.004f;
 	}
-	gui_light_type[0] = 1;	//Only the first light is on by default
+	//Light 1 custom setup
+	gui_light_type[0] = 1;
 	gui_light_direction[0] = XMFLOAT3(.25f, -.125f, .7f);
 	gui_light_position[0] = XMFLOAT3(-50.f, 30.f, -125.f);
 	gui_light_frustum[0] = XMFLOAT2(45.f, 225.f);
 	gui_light_diffuse_colour[0] = XMFLOAT4(.995f, .586f, .0f, 1.f);
+
+	//Light 2 curstom setup
+	gui_light_type[1] = 2;
+	gui_light_position[1] = XMFLOAT3(10.f, -5.f, 13.f);
+	gui_light_frustum[1] = XMFLOAT2(5.f, 100.f);
+	gui_light_diffuse_colour[1] = XMFLOAT4(1.f, .835f, .377f, 1.f);
+	gui_light_attenuation_factors[1] = XMFLOAT3(.0f, .1f, .0f);
 }
 
 void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeight, Input *in, bool VSYNC, bool FULL_SCREEN)
