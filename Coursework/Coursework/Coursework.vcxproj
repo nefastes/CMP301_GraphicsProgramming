@@ -168,8 +168,9 @@
   <ItemGroup>
     <ClCompile Include="App1.cpp" />
     <ClCompile Include="DebugNormalsShader.cpp" />
+    <ClCompile Include="DepthModelTessShader.cpp" />
     <ClCompile Include="DepthShader.cpp" />
-    <ClCompile Include="DepthTessShader.cpp" />
+    <ClCompile Include="DepthTerrainTessShader.cpp" />
     <ClCompile Include="LightDebugShader.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="PlaneTessellationColourShader.cpp" />
@@ -183,8 +184,9 @@
   <ItemGroup>
     <ClInclude Include="App1.h" />
     <ClInclude Include="DebugNormalsShader.h" />
+    <ClInclude Include="DepthModelTessShader.h" />
     <ClInclude Include="DepthShader.h" />
-    <ClInclude Include="DepthTessShader.h" />
+    <ClInclude Include="DepthTerrainTessShader.h" />
     <ClInclude Include="LightDebugShader.h" />
     <ClInclude Include="PlaneTessellationColourShader.h" />
     <ClInclude Include="PlaneTessellationShader.h" />
@@ -289,6 +291,9 @@
     </FxCompile>
     <FxCompile Include="shaders\texture_vs.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+    </FxCompile>
+    <FxCompile Include="tessellation_model_depth_ds.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Domain</ShaderType>
     </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

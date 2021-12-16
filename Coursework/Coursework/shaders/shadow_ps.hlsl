@@ -71,7 +71,7 @@ float2 getProjectiveCoords(float4 lightViewPosition)
 
 float4 main(InputType input) : SV_TARGET
 {
-	float4 colour = float4(0.f, 0.f, 0.f, 0.f);
+    float4 colour = float4(0.f, 0.f, 0.f, 0.f);
 	float4 specular_new_colour = float4(0.f, 0.f, 0.f, 0.f);
     float4 texture_colour = shaderTexture.Sample(diffuseSampler, input.tex);
 	float4 ambient_avg = float4(0.f, 0.f, 0.f, 0.f);

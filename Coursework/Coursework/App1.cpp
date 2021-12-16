@@ -3,7 +3,7 @@
 #include "App1.h"
 
 App1::App1() : gui_shadow_map_display_index(0), gui_min_max_LOD(1.f, 15.f), gui_min_max_distance(50.f, 75.f),
-gui_render_normals(false), gui_terrain_texture_sacale(XMFLOAT2(20.f, 20.f)), gui_terrain_height_amplitude(2.875f)
+gui_render_normals(false), gui_terrain_texture_sacale(XMFLOAT2(20.f, 20.f)), gui_terrain_height_amplitude(2.875f), gui_model_height_amplitude(0.f)
 {
 	for (int i = 0; i < N_LIGHTS; ++i)
 	{
@@ -53,7 +53,8 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	// Init shaders
 	texture_shader = std::make_unique<TextureShader>(renderer->getDevice(), hwnd);
 	depth_shader = std::make_unique<DepthShader>(renderer->getDevice(), hwnd);
-	depth_tess_shader = std::make_unique<DepthTessShader>(renderer->getDevice(), hwnd);
+	depth_tess_terrain_shader = std::make_unique<DepthTerrainTessShader>(renderer->getDevice(), hwnd);
+	depth_tess_model_shader = std::make_unique<DepthModelTessShader>(renderer->getDevice(), hwnd);
 	light_shader = std::make_unique<ShadowShader>(renderer->getDevice(), hwnd);
 	light_debug_shader = std::make_unique<LightDebugShader>(renderer->getDevice(), hwnd);
 	terrain_tess_shader = std::make_unique<PlaneTessellationShader>(renderer->getDevice(), hwnd);
@@ -156,9 +157,9 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 	mesh_terrain->sendData(renderer->getDeviceContext());
 	if (renderDepth)
 	{
-		depth_tess_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
+		depth_tess_terrain_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
 			textureMgr->getTexture(L"heightMap"), gui_min_max_LOD, gui_min_max_distance, gui_terrain_height_amplitude, camera);
-		depth_tess_shader->render(renderer->getDeviceContext(), mesh_terrain->getIndexCount());
+		depth_tess_terrain_shader->render(renderer->getDeviceContext(), mesh_terrain->getIndexCount());
 	}
 	else
 	{
@@ -173,17 +174,24 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 	world = XMMatrixMultiply(world, XMMatrixRotationAxis(XMVectorSet(0.f, 1.f, 0.f, 1.f), AI_DEG_TO_RAD(90.f)));
 	world = XMMatrixMultiply(world, XMMatrixScaling(0.5f, 0.25f, 0.5f));
 	world = XMMatrixMultiply(world, XMMatrixTranslation(2.f, -20.f, -6.f));
-	model_rock->sendData(renderer->getDeviceContext());
+	//world = XMMatrixTranslation(20.f, -0.f, 0.f);
+	model_rock->sendData(renderer->getDeviceContext(), D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
 	if (renderDepth)
 	{
-		depth_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
-		depth_shader->render(renderer->getDeviceContext(), model_rock->getIndexCount());
+		depth_tess_model_shader->setShaderParameters(
+			renderer->getDeviceContext(), world, view, proj,
+			textureMgr->getTexture(L"model_rock_height"), gui_min_max_LOD, gui_min_max_distance, gui_model_height_amplitude, camera
+		);
+		depth_tess_model_shader->render(renderer->getDeviceContext(), model_rock->getIndexCount());
 	}
 	else
 	{
-		light_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
-			textureMgr->getTexture(L"model_rock_diffuse"),  maps, light.data(), camera);
-		light_shader->render(renderer->getDeviceContext(), model_rock->getIndexCount());
+		model_tess_shader->setShaderParameters(
+			renderer->getDeviceContext(), world, view, proj,
+			textureMgr->getTexture(L"model_rock_diffuse"), textureMgr->getTexture(L"model_rock_height"), textureMgr->getTexture(L"model_rock_normal"),
+			gui_min_max_LOD, gui_min_max_distance, gui_model_height_amplitude, maps, light.data(), camera, gui_render_normals
+		);
+		model_tess_shader->render(renderer->getDeviceContext(), model_rock->getIndexCount());
 		if (gui_render_normals)
 		{
 			debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
@@ -193,17 +201,24 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 	world = XMMatrixRotationAxis(XMVectorSet(0.f, 0.f, 1.f, 1.f), AI_DEG_TO_RAD(90.f));
 	world = XMMatrixMultiply(world, XMMatrixScaling(0.375f, 0.125f, 0.25f));
 	world = XMMatrixMultiply(world, XMMatrixTranslation(-12.f, -19.f, 12.f));
-	model_rock->sendData(renderer->getDeviceContext());
+	//world = XMMatrixTranslation(-20.f, -0.f, 0.f);
+	model_rock->sendData(renderer->getDeviceContext(), D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
 	if (renderDepth)
 	{
-		depth_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
-		depth_shader->render(renderer->getDeviceContext(), model_rock->getIndexCount());
+		depth_tess_model_shader->setShaderParameters(
+			renderer->getDeviceContext(), world, view, proj,
+			textureMgr->getTexture(L"model_rock_height"), gui_min_max_LOD, gui_min_max_distance, gui_model_height_amplitude, camera
+		);
+		depth_tess_model_shader->render(renderer->getDeviceContext(), model_rock->getIndexCount());
 	}
 	else
 	{
-		light_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
-			textureMgr->getTexture(L"model_rock_diffuse"), maps, light.data(), camera);
-		light_shader->render(renderer->getDeviceContext(), model_rock->getIndexCount());
+		model_tess_shader->setShaderParameters(
+			renderer->getDeviceContext(), world, view, proj,
+			textureMgr->getTexture(L"model_rock_diffuse"), textureMgr->getTexture(L"model_rock_height"), textureMgr->getTexture(L"model_rock_normal"),
+			gui_min_max_LOD, gui_min_max_distance, gui_model_height_amplitude, maps, light.data(), camera, gui_render_normals
+		);
+		model_tess_shader->render(renderer->getDeviceContext(), model_rock->getIndexCount());
 		if (gui_render_normals)
 		{
 			debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
@@ -425,6 +440,9 @@ void App1::gui()
 	ImGui::SliderFloat2("minMaxDistance", &gui_min_max_distance.x, 0.f, 200.f);
 	ImGui::SliderFloat2("Texture Scale", &gui_terrain_texture_sacale.x, .1f, 20.f);
 	ImGui::SliderFloat("Height Amplitude", &gui_terrain_height_amplitude, 0.f, 20.f);
+
+	ImGui::Text("Model Mesh Settings:");
+	ImGui::SliderFloat("Tessellation Height Amplitude", &gui_model_height_amplitude, 0.f, 20.f);
 
 	ImGui::Separator();
 

@@ -99,11 +99,14 @@
     <ClCompile Include="PlaneTessellationTextureShader.cpp">
       <Filter>Source Files\Debug</Filter>
     </ClCompile>
-    <ClCompile Include="DepthTessShader.cpp">
+    <ClCompile Include="DepthTerrainTessShader.cpp">
       <Filter>Source Files\Lighting</Filter>
     </ClCompile>
     <ClCompile Include="ModelTessellationShader.cpp">
       <Filter>Source Files\Tessellation</Filter>
+    </ClCompile>
+    <ClCompile Include="DepthModelTessShader.cpp">
+      <Filter>Source Files\Lighting</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -137,11 +140,14 @@
     <ClInclude Include="PlaneTessellationTextureShader.h">
       <Filter>Header Files\Debug</Filter>
     </ClInclude>
-    <ClInclude Include="DepthTessShader.h">
+    <ClInclude Include="DepthTerrainTessShader.h">
       <Filter>Header Files\Lighting</Filter>
     </ClInclude>
     <ClInclude Include="ModelTessellationShader.h">
       <Filter>Header Files\Tessellation</Filter>
+    </ClInclude>
+    <ClInclude Include="DepthModelTessShader.h">
+      <Filter>Header Files\Lighting</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -234,6 +240,9 @@
     </FxCompile>
     <FxCompile Include="shaders\tessellation_model_vs.hlsl">
       <Filter>Resource Files\Tessellation\Model</Filter>
+    </FxCompile>
+    <FxCompile Include="tessellation_model_depth_ds.hlsl">
+      <Filter>Resource Files\Lighting\DepthPass</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

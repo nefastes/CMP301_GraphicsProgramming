@@ -20,13 +20,6 @@ cbuffer LightBuffer : register(b0)
     float4 falloff_spotAngle_renderNormals_padding[N_LIGHTS];
 };
 
-cbuffer SettingsBuffer : register(b1)
-{
-    float2 texture_scale;
-    float height_amplitude;
-    float padding;
-};
-
 struct InputType
 {
     float4 position : SV_POSITION;
@@ -82,11 +75,9 @@ float2 getProjectiveCoords(float4 lightViewPosition)
 
 float4 main(InputType input) : SV_TARGET
 {
-	return float4(1.f, 0.f, 0.f, 1.f);
-
     float4 colour = float4(0.f, 0.f, 0.f, 0.f);
     float4 specular_new_colour = float4(0.f, 0.f, 0.f, 0.f);
-    float4 texture_colour = shaderTexture.Sample(diffuseSampler, input.tex * texture_scale);
+    float4 texture_colour = shaderTexture.Sample(diffuseSampler, input.tex);
     float4 ambient_avg = float4(0.f, 0.f, 0.f, 0.f);
     int ambient_count = 0;
     

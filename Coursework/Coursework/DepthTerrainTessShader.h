@@ -2,15 +2,13 @@
 // Simple shader example.
 #pragma once
 
-#define N_LIGHTS 4
-
 #include "DXF.h"
 
 using namespace std;
 using namespace DirectX;
 
 
-class DepthTessShader : public BaseShader
+class DepthTerrainTessShader : public BaseShader
 {
 
 	struct MatrixBufferType
@@ -35,8 +33,8 @@ class DepthTessShader : public BaseShader
 
 public:
 
-	DepthTessShader(ID3D11Device* device, HWND hwnd);
-	~DepthTessShader();
+	DepthTerrainTessShader(ID3D11Device* device, HWND hwnd);
+	~DepthTerrainTessShader();
 
 	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& projection,
 		ID3D11ShaderResourceView* heightMap, XMFLOAT2& minMaxLOD, XMFLOAT2& minMaxDistance, float height_amplitude, Camera* camera);

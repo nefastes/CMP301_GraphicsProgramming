@@ -32,11 +32,6 @@ ModelTessellationShader::~ModelTessellationShader()
 		DsSettingsBuffer->Release();
 		DsSettingsBuffer = 0;
 	}
-	if (PsSettingsBuffer)
-	{
-		PsSettingsBuffer->Release();
-		PsSettingsBuffer = 0;
-	}
 	if (layout)
 	{
 		layout->Release();
@@ -48,8 +43,7 @@ ModelTessellationShader::~ModelTessellationShader()
 }
 
 void ModelTessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix,
-	ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* heightMap, ID3D11ShaderResourceView* normalMap, XMFLOAT2& minMaxLOD,
-	XMFLOAT2& minMaxDistance, XMFLOAT2& tex_scale,
+	ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* heightMap, ID3D11ShaderResourceView* normalMap, XMFLOAT2& minMaxLOD, XMFLOAT2& minMaxDistance,
 	float height_amplitude, std::unique_ptr<ShadowMap>* maps, std::unique_ptr<Light>* light, Camera* camera, bool render_normals)
 {
 	HRESULT result;
@@ -124,15 +118,6 @@ void ModelTessellationShader::setShaderParameters(ID3D11DeviceContext* deviceCon
 	deviceContext->Unmap(lightBuffer, 0);
 	deviceContext->PSSetConstantBuffers(0, 1, &lightBuffer);
 
-	//PS settings buffer
-	result = deviceContext->Map(PsSettingsBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	PsSettingsBufferType* PsSettingsPtr = (PsSettingsBufferType*)mappedResource.pData;
-	PsSettingsPtr->texture_scale = tex_scale;
-	PsSettingsPtr->height_amplitude = height_amplitude;
-	PsSettingsPtr->padding = 0.f;
-	deviceContext->Unmap(PsSettingsBuffer, 0);
-	deviceContext->PSSetConstantBuffers(1, 1, &PsSettingsBuffer);
-
 	// Set shader texture resource in the pixel shader.
 	deviceContext->PSSetShaderResources(0, 1, &texture);
 	for (int i = 0; i < N_LIGHTS * 6; ++i)
@@ -189,16 +174,6 @@ void ModelTessellationShader::initShader(const wchar_t* vsFilename, const wchar_
 	DsSettingsBufferDesc.MiscFlags = 0;
 	DsSettingsBufferDesc.StructureByteStride = 0;
 	renderer->CreateBuffer(&DsSettingsBufferDesc, NULL, &DsSettingsBuffer);
-
-	//Setup pixel shader settings buffer
-	D3D11_BUFFER_DESC PsSettingsBufferDesc;
-	PsSettingsBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	PsSettingsBufferDesc.ByteWidth = sizeof(PsSettingsBufferType);
-	PsSettingsBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	PsSettingsBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	PsSettingsBufferDesc.MiscFlags = 0;
-	PsSettingsBufferDesc.StructureByteStride = 0;
-	renderer->CreateBuffer(&PsSettingsBufferDesc, NULL, &PsSettingsBuffer);
 
 	// Create a texture sampler state description.
 	D3D11_SAMPLER_DESC samplerDesc;

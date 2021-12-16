@@ -1,13 +1,13 @@
-#include "DepthTessShader.h"
+#include "DepthTerrainTessShader.h"
 
-DepthTessShader::DepthTessShader(ID3D11Device* device, HWND hwnd) : BaseShader(device, hwnd)
+DepthTerrainTessShader::DepthTerrainTessShader(ID3D11Device* device, HWND hwnd) : BaseShader(device, hwnd)
 {
 	initShader(L"tessellation_terrain_vs.cso", L"depth_ps.cso");
 	loadHullShader(L"tessellation_terrain_fodd_hs.cso");
 	loadDomainShader(L"tessellation_terrain_depth_ds.cso");
 }
 
-DepthTessShader::~DepthTessShader()
+DepthTerrainTessShader::~DepthTerrainTessShader()
 {
 	// Release the matrix constant buffer.
 	if (matrixBuffer)
@@ -38,7 +38,7 @@ DepthTessShader::~DepthTessShader()
 	BaseShader::~BaseShader();
 }
 
-void DepthTessShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilename)
+void DepthTerrainTessShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilename)
 {
 	// Load (+ compile) shader files
 	loadVertexShader(vsFilename);
@@ -93,7 +93,7 @@ void DepthTessShader::initShader(const wchar_t* vsFilename, const wchar_t* psFil
 
 }
 
-void DepthTessShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix,
+void DepthTerrainTessShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix,
 	ID3D11ShaderResourceView* heightMap, XMFLOAT2& minMaxLOD, XMFLOAT2& minMaxDistance, float height_amplitude, Camera* camera)
 {
 	HRESULT result;

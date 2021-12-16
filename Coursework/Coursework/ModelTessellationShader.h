@@ -45,21 +45,13 @@ class ModelTessellationShader : public BaseShader
 		XMFLOAT3 padding;
 	};
 
-	struct PsSettingsBufferType
-	{
-		XMFLOAT2 texture_scale;
-		float height_amplitude;
-		float padding;
-	};
-
 public:
 
 	ModelTessellationShader(ID3D11Device* device, HWND hwnd);
 	~ModelTessellationShader();
 
 	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& projection,
-		ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* heightMap, ID3D11ShaderResourceView* normalMap, XMFLOAT2& minMaxLOD,
-		XMFLOAT2& minMaxDistance, XMFLOAT2& tex_scale,
+		ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* heightMap, ID3D11ShaderResourceView* normalMap, XMFLOAT2& minMaxLOD, XMFLOAT2& minMaxDistance,
 		float height_amplitude, std::unique_ptr<ShadowMap>* maps, std::unique_ptr<Light>* light, Camera* camera, bool render_normals);
 
 private:
@@ -72,6 +64,5 @@ private:
 	ID3D11Buffer* lightBuffer;
 	ID3D11Buffer* HsSettingsBuffer;
 	ID3D11Buffer* DsSettingsBuffer;
-	ID3D11Buffer* PsSettingsBuffer;
 };
 

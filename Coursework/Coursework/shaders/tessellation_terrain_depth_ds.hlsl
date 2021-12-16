@@ -36,10 +36,6 @@ struct InputType
 struct OutputType
 {
 	float4 position : SV_POSITION;
-	float2 tex : TEXCOORD0;
-	float3 normal : NORMAL;
-	float3 worldPosition : TEXCOORD1;
-    float3 viewVector : TEXCOORD2;
 };
 
 float getHeight(float2 uv)
@@ -72,20 +68,8 @@ OutputType main(ConstantOutputType input, float2 uv : SV_DomainLocation, const O
 		    
     // Calculate the position of the new vertex against the world, view, and projection matrices.
     output.position = mul(float4(vertexPosition, 1.0f), worldMatrix);
-	output.worldPosition = output.position;
     output.position = mul(output.position, viewMatrix);
     output.position = mul(output.position, projectionMatrix);
-
-	//Calculate the position of the vertex viewed by the camera
-	output.viewVector = patch[0].cameraPosition - output.worldPosition;
-	output.viewVector = normalize(output.viewVector);
-
-    // Send the input tex into the pixel shader.
-	output.tex = texCoord;
-    
-    // Send the input normal into the pixel shader.
-	output.normal = mul(patch[0].normal, (float3x3) worldMatrix);
-	output.normal = normalize(output.normal);
 
     return output;
 }

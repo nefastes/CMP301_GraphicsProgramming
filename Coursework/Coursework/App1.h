@@ -9,7 +9,8 @@
 #include "TextureShader.h"
 #include "ShadowShader.h"
 #include "DepthShader.h"
-#include "DepthTessShader.h"
+#include "DepthTerrainTessShader.h"
+#include "DepthModelTessShader.h"
 #include "LightDebugShader.h"
 #include "DebugNormalsShader.h"
 #include "PlaneTessellationShader.h"
@@ -42,7 +43,8 @@ private:
 	//Shaders
 	std::unique_ptr<ShadowShader> light_shader;
 	std::unique_ptr<DepthShader> depth_shader;
-	std::unique_ptr<DepthTessShader> depth_tess_shader;
+	std::unique_ptr<DepthTerrainTessShader> depth_tess_terrain_shader;
+	std::unique_ptr<DepthModelTessShader> depth_tess_model_shader;
 	std::unique_ptr<LightDebugShader> light_debug_shader;
 	std::unique_ptr<PlaneTessellationShader> terrain_tess_shader;
 	std::unique_ptr<ModelTessellationShader> model_tess_shader;
@@ -92,6 +94,7 @@ private:
 	XMFLOAT2 gui_min_max_distance;
 	XMFLOAT2 gui_terrain_texture_sacale;
 	float gui_terrain_height_amplitude;
+	float gui_model_height_amplitude;
 };
 
 #endif
