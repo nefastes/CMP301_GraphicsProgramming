@@ -184,8 +184,12 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 	world = XMMatrixMultiply(world, XMMatrixTranslation(2.f, -20.f, -6.f));
 	//world = XMMatrixTranslation(20.f, -0.f, 0.f);
 	model_rock->sendData(renderer->getDeviceContext(), D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
+	//model_rock->sendData(renderer->getDeviceContext());
 	if (renderDepth)
 	{
+		/*depth_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
+		depth_shader->render(renderer->getDeviceContext(), model_rock->getIndexCount());*/
+
 		depth_tess_model_shader->setShaderParameters(
 			renderer->getDeviceContext(), world, view, proj,
 			textureMgr->getTexture(L"model_rock_height"), gui_min_max_LOD, gui_min_max_distance, gui_model_height_amplitude, camera
@@ -194,6 +198,9 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 	}
 	else
 	{
+		/*light_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
+			textureMgr->getTexture(L"model_rock_diffuse"), maps, light.data(), camera);
+		light_shader->render(renderer->getDeviceContext(), model_rock->getIndexCount());*/
 		model_tess_shader->setShaderParameters(
 			renderer->getDeviceContext(), world, view, proj,
 			textureMgr->getTexture(L"model_rock_diffuse"), textureMgr->getTexture(L"model_rock_height"), textureMgr->getTexture(L"model_rock_normal"),
@@ -221,6 +228,9 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 	}
 	else
 	{
+		/*light_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
+			textureMgr->getTexture(L"model_rock_diffuse"), maps, light.data(), camera);
+		light_shader->render(renderer->getDeviceContext(), model_rock->getIndexCount());*/
 		model_tess_shader->setShaderParameters(
 			renderer->getDeviceContext(), world, view, proj,
 			textureMgr->getTexture(L"model_rock_diffuse"), textureMgr->getTexture(L"model_rock_height"), textureMgr->getTexture(L"model_rock_normal"),
@@ -298,7 +308,7 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 	//}
 
 	//Totoro
-	world = XMMatrixScaling(12.f, 12.f, 12.f);
+	/*world = XMMatrixScaling(12.f, 12.f, 12.f);
 	world = XMMatrixMultiply(world, XMMatrixTranslation(0.f, -20.f, 13.f));
 	model_totoro->sendData(renderer->getDeviceContext());
 	if (renderDepth)
@@ -316,7 +326,7 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 			debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
 			debug_normals_shader->render(renderer->getDeviceContext(), model_totoro->getIndexCount());
 		}
-	}
+	}*/
 }
 
 void App1::depthPass()

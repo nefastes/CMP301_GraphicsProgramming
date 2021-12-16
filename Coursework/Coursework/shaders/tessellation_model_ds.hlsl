@@ -54,7 +54,7 @@ float getHeight(float2 uv)
 [domain("tri")]
 OutputType main(ConstantOutputType input, float3 uvw : SV_DomainLocation, const OutputPatch<InputType, 3> patch)
 {
-	float3 vertexPosition = float3(0.f, 0.f, 0.f);
+    float3 vertexPosition, normal;
 	float2 texCoord;
     OutputType output;
  
@@ -63,6 +63,11 @@ OutputType main(ConstantOutputType input, float3 uvw : SV_DomainLocation, const 
         patch[0].position * uvw.x +
         patch[1].position * uvw.y +
         patch[2].position * uvw.z;
+	
+    normal =
+        patch[0].normal * uvw.x +
+        patch[1].normal * uvw.y +
+        patch[2].normal * uvw.z;
         
 	texCoord =
 		patch[0].tex * uvw.x +
@@ -70,10 +75,9 @@ OutputType main(ConstantOutputType input, float3 uvw : SV_DomainLocation, const 
         patch[2].tex * uvw.z;
 	
 	// Send the input normal into the pixel shader.
-    //float3 normal = normalMap.SampleLevel(Sampler, texCoord, 0).xyz;
-    //output.normal = mul(normal, (float3x3) worldMatrix);
-    //output.normal = normalize(output.normal);
-    output.normal = normalize(patch[0].normal);
+    //normal = normalMap.SampleLevel(Sampler, texCoord, 0).xyz;
+    output.normal = mul(normal, (float3x3) worldMatrix);
+    output.normal = normalize(output.normal);
 
 	//Get the height of the vertex from the heightmap
   //  float3 direction = patch[0].normal * getHeight(texCoord);

@@ -120,10 +120,11 @@ void ModelTessellationShader::setShaderParameters(ID3D11DeviceContext* deviceCon
 
 	// Set shader texture resource in the pixel shader.
 	deviceContext->PSSetShaderResources(0, 1, &texture);
+	deviceContext->PSSetShaderResources(1, 1, &normalMap);
 	for (int i = 0; i < N_LIGHTS * 6; ++i)
 	{
 		ID3D11ShaderResourceView* depthMap = maps[i]->getDepthMapSRV();
-		deviceContext->PSSetShaderResources(i + 1, 1, &depthMap);
+		deviceContext->PSSetShaderResources(i + 2, 1, &depthMap);
 	}
 	deviceContext->PSSetSamplers(0, 1, &sampleState);
 	deviceContext->PSSetSamplers(1, 1, &sampleStateShadow);
