@@ -6,6 +6,8 @@ cbuffer MatrixBuffer : register(b0)
     matrix worldMatrix;
     matrix viewMatrix;
     matrix projectionMatrix;
+    float3 model_scale;
+    float padding;
 };
 
 struct InputType
@@ -49,7 +51,7 @@ void main(triangle InputType input[3], inout LineStream<OutputType> lineStream)
     output.position = mul(output.position, viewMatrix);
     output.position = mul(output.position, projectionMatrix);
     lineStream.Append(output);
-    output.position = vertex + normal;
+    output.position = vertex + (normal / float4(model_scale, 1.f));
     output.position = mul(output.position, worldMatrix);
     output.position = mul(output.position, viewMatrix);
     output.position = mul(output.position, projectionMatrix);

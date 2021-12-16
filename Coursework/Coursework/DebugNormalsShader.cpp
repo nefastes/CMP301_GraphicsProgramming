@@ -60,7 +60,8 @@ void DebugNormalsShader::initShader(const wchar_t* vsFilename, const wchar_t* gs
 }
 
 
-void DebugNormalsShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix)
+void DebugNormalsShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix,
+	const XMMATRIX& projectionMatrix, XMFLOAT3 model_scale)
 {
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	MatrixBufferType* dataPtr;
@@ -75,6 +76,8 @@ void DebugNormalsShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	dataPtr->world = tworld;// worldMatrix;
 	dataPtr->view = tview;
 	dataPtr->projection = tproj;
+	dataPtr->model_scale = model_scale;
+	dataPtr->padding = 0.f;
 	deviceContext->Unmap(matrixBuffer, 0);
 	deviceContext->GSSetConstantBuffers(0, 1, &matrixBuffer);
 }

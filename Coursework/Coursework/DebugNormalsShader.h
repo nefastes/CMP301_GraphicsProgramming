@@ -19,7 +19,8 @@ public:
 	DebugNormalsShader(ID3D11Device* device, HWND hwnd);
 	~DebugNormalsShader();
 
-	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix);
+	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix,
+		const XMMATRIX& projectionMatrix, XMFLOAT3 model_scale = XMFLOAT3(1.f, 1.f, 1.f));
 
 private:
 	void initShader(const wchar_t* vs, const wchar_t* ps);

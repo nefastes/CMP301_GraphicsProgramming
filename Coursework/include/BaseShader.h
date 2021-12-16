@@ -34,6 +34,8 @@ protected:
 		XMMATRIX world;
 		XMMATRIX view;
 		XMMATRIX projection;
+		XMFLOAT3 model_scale;
+		float padding;
 	};
 
 public:

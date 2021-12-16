@@ -80,15 +80,15 @@ OutputType main(ConstantOutputType input, float3 uvw : SV_DomainLocation, const 
     output.normal = normalize(output.normal);
 
 	//Get the height of the vertex from the heightmap
-  //  float3 direction = patch[0].normal * getHeight(texCoord);
-  //  float4x4 translation =
-  //  {
-  //      1.f, 0.f, 0.f, 0.f,
-		//0.f, 1.f, 0.f, 0.f,
-		//0.f, 0.f, 1.f, 0.f,
-		//direction.x, direction.y, direction.z, 1.f
-  //  };
-  //  vertexPosition = mul(float4(vertexPosition, 1.f), translation);
+    float3 direction = patch[0].normal * getHeight(texCoord);
+    float4x4 translation =
+    {
+        1.f, 0.f, 0.f, 0.f,
+		0.f, 1.f, 0.f, 0.f,
+		0.f, 0.f, 1.f, 0.f,
+		direction.x, direction.y, direction.z, 1.f
+    };
+    vertexPosition = mul(float4(vertexPosition, 1.f), translation);
 		    
     // Calculate the position of the new vertex against the world, view, and projection matrices.
     output.position = mul(float4(vertexPosition, 1.0f), worldMatrix);
