@@ -123,6 +123,9 @@
     <ClCompile Include="VertBlurCompute.cpp">
       <Filter>Source Files\Compute</Filter>
     </ClCompile>
+    <ClCompile Include="BloomThresholdCompute.cpp">
+      <Filter>Source Files\Compute</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App1.h">
@@ -168,6 +171,9 @@
       <Filter>Header Files\Compute</Filter>
     </ClInclude>
     <ClInclude Include="HoriBlurCompute.h">
+      <Filter>Header Files\Compute</Filter>
+    </ClInclude>
+    <ClInclude Include="BloomThresholdCompute.h">
       <Filter>Header Files\Compute</Filter>
     </ClInclude>
   </ItemGroup>

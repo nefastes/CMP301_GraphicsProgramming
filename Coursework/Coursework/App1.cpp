@@ -436,29 +436,6 @@ void App1::finalPass()
 {
 	// Clear the scene. (default blue colour)
 	renderer->beginScene(0.39f, 0.58f, 0.92f, 1.0f);
-	//camera->update();
-
-	//// get the world, view, projection, and ortho matrices from the camera and Direct3D objects.
-	//XMMATRIX worldMatrix;
-	//XMMATRIX viewMatrix = camera->getViewMatrix();
-	//XMMATRIX projectionMatrix = renderer->getProjectionMatrix();
-
-	////Render the light debug sphere
-	//mesh_light_debug_sphere->sendData(renderer->getDeviceContext());
-	//for (int i = 0; i < N_LIGHTS; ++i)
-	//{
-	//	//If light is off, dont draw sphere
-	//	if (!light[i]->getType()) continue;
-
-	//	XMFLOAT3 light_pos = light[i]->getPosition();
-	//	worldMatrix = XMMatrixScaling(.5f, .5f, .5f);
-	//	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(light_pos.x, light_pos.y, light_pos.z));
-	//	light_debug_shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, light[i].get());
-	//	light_debug_shader->render(renderer->getDeviceContext(), mesh_light_debug_sphere->getIndexCount());
-	//}
-
-	//// Render other objects used in multiple passes
-	//renderObjects(viewMatrix, projectionMatrix, shadowmap.data(), false);
 
 	//// Render 2D meshes
 	XMMATRIX worldMatrix = renderer->getWorldMatrix();
@@ -482,6 +459,8 @@ void App1::finalPass()
 	texture_shader->render(renderer->getDeviceContext(), orthomesh_debug_shadow_maps->getIndexCount());
 	renderer->setZBuffer(true);
 
+
+	//// Render GUI
 	gui();
 	renderer->endScene();
 }

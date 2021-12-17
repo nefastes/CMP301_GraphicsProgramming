@@ -382,23 +382,12 @@ void D3D::beginScene(float red, float green, float blue, float alpha)
 
 	deviceContext->ClearRenderTargetView(renderTargetView, color);
 	deviceContext->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
-
-	return;
 }
 
 // Present the back buffer to the screen now rendering is complete (based on vsync switch)
 void D3D::endScene()
 {
-	if (vsync_enabled)
-	{
-		swapChain->Present(1, 0);
-	}
-	else
-	{
-		swapChain->Present(0, 0);
-	}
-
-	return;
+	swapChain->Present(vsync_enabled, 0);
 }
 
 // Get 3D device
@@ -482,14 +471,12 @@ bool D3D::getAlphaBlendingState()
 void D3D::setBackBufferRenderTarget()
 {
 	deviceContext->OMSetRenderTargets(1, &renderTargetView, depthStencilView);
-	return;
 }
 
 // Your initialise will create a local viewport variable, and you can swap it to this one
 void D3D::resetViewport()
 {
 	deviceContext->RSSetViewports(1, &viewport);
-	return;
 }
 
 // Enable/disable wireframe rendering. Uses previously created raster states.
