@@ -64,6 +64,15 @@
     <Filter Include="Resource Files\Tessellation\Model">
       <UniqueIdentifier>{6252e9d6-c62a-46aa-91ca-d2c12000e99f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Compute">
+      <UniqueIdentifier>{1e86f8cd-2db4-438f-b78c-8d744f3625e5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Compute">
+      <UniqueIdentifier>{8ed44270-6077-43b8-8815-00cb1b4f2c0b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Compute">
+      <UniqueIdentifier>{656fcba0-dfc6-4d19-9762-52489b2b7ecb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -108,6 +117,12 @@
     <ClCompile Include="DepthModelTessShader.cpp">
       <Filter>Source Files\Lighting</Filter>
     </ClCompile>
+    <ClCompile Include="HoriBlurCompute.cpp">
+      <Filter>Source Files\Compute</Filter>
+    </ClCompile>
+    <ClCompile Include="VertBlurCompute.cpp">
+      <Filter>Source Files\Compute</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App1.h">
@@ -148,6 +163,12 @@
     </ClInclude>
     <ClInclude Include="DepthModelTessShader.h">
       <Filter>Header Files\Lighting</Filter>
+    </ClInclude>
+    <ClInclude Include="VertBlurCompute.h">
+      <Filter>Header Files\Compute</Filter>
+    </ClInclude>
+    <ClInclude Include="HoriBlurCompute.h">
+      <Filter>Header Files\Compute</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -243,6 +264,12 @@
     </FxCompile>
     <FxCompile Include="tessellation_model_depth_ds.hlsl">
       <Filter>Resource Files\Lighting\DepthPass</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\blur_horizontal_cs.hlsl">
+      <Filter>Resource Files\Compute</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\blur_vertical_cs.hlsl">
+      <Filter>Resource Files\Compute</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

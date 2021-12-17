@@ -171,6 +171,7 @@
     <ClCompile Include="DepthModelTessShader.cpp" />
     <ClCompile Include="DepthShader.cpp" />
     <ClCompile Include="DepthTerrainTessShader.cpp" />
+    <ClCompile Include="HoriBlurCompute.cpp" />
     <ClCompile Include="LightDebugShader.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="PlaneTessellationColourShader.cpp" />
@@ -180,6 +181,7 @@
     <ClCompile Include="ShadowShader.cpp" />
     <ClCompile Include="TerrainMesh.cpp" />
     <ClCompile Include="TextureShader.cpp" />
+    <ClCompile Include="VertBlurCompute.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App1.h" />
@@ -187,6 +189,7 @@
     <ClInclude Include="DepthModelTessShader.h" />
     <ClInclude Include="DepthShader.h" />
     <ClInclude Include="DepthTerrainTessShader.h" />
+    <ClInclude Include="HoriBlurCompute.h" />
     <ClInclude Include="LightDebugShader.h" />
     <ClInclude Include="PlaneTessellationColourShader.h" />
     <ClInclude Include="PlaneTessellationShader.h" />
@@ -195,6 +198,7 @@
     <ClInclude Include="ShadowShader.h" />
     <ClInclude Include="TerrainMesh.h" />
     <ClInclude Include="TextureShader.h" />
+    <ClInclude Include="VertBlurCompute.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DXFramework\DXFramework.vcxproj">
@@ -202,6 +206,12 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="shaders\blur_horizontal_cs.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaders\blur_vertical_cs.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+    </FxCompile>
     <FxCompile Include="shaders\debug_normals_gs.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Geometry</ShaderType>
     </FxCompile>

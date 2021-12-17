@@ -3,7 +3,8 @@
 #include "App1.h"
 
 App1::App1() : gui_shadow_map_display_index(0), gui_min_max_LOD(1.f, 15.f), gui_min_max_distance(50.f, 75.f),
-gui_render_normals(false), gui_terrain_texture_sacale(XMFLOAT2(20.f, 20.f)), gui_terrain_height_amplitude(2.875f), gui_model_height_amplitude(0.f)
+gui_render_normals(false), gui_terrain_texture_sacale(XMFLOAT2(20.f, 20.f)), gui_terrain_height_amplitude(2.875f),
+gui_model_height_amplitude(0.f), gui_bloom_treshold(0.7f)
 {
 	for (int i = 0; i < N_LIGHTS; ++i)
 	{
@@ -42,10 +43,10 @@ gui_render_normals(false), gui_terrain_texture_sacale(XMFLOAT2(20.f, 20.f)), gui
 
 void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeight, Input *in, bool VSYNC, bool FULL_SCREEN)
 {
-	// Call super/parent init function (required!)
+	//// Call super/parent init function (required!)
 	BaseApplication::init(hinstance, hwnd, screenWidth, screenHeight, in, VSYNC, FULL_SCREEN);
 
-	// Load textures
+	//// Load textures
 	textureMgr->loadTexture(L"heightMap", L"res/heightmap7.dds");
 	textureMgr->loadTexture(L"brick", L"res/brick1.dds");
 	textureMgr->loadTexture(L"wood", L"res/wood.png");
@@ -59,7 +60,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	textureMgr->loadTexture(L"model_bench_normal", L"res/models/bench/benchs_normal.png");
 	textureMgr->loadTexture(L"model_lamp_diffuse", L"res/models/lamp2/diffuse.png");
 
-	// Init shaders
+	//// Init shaders
 	texture_shader = std::make_unique<TextureShader>(renderer->getDevice(), hwnd);
 	depth_shader = std::make_unique<DepthShader>(renderer->getDevice(), hwnd);
 	depth_tess_terrain_shader = std::make_unique<DepthTerrainTessShader>(renderer->getDevice(), hwnd);
@@ -69,18 +70,20 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	terrain_tess_shader = std::make_unique<PlaneTessellationShader>(renderer->getDevice(), hwnd);
 	model_tess_shader = std::make_unique<ModelTessellationShader>(renderer->getDevice(), hwnd);
 	debug_normals_shader = std::make_unique<DebugNormalsShader>(renderer->getDevice(), hwnd);
+	horizontal_blur_compute = std::make_unique<HoriBlurCompute>(renderer->getDevice(), hwnd, screenWidth, screenHeight);
+	vertical_blur_compute = std::make_unique<VertBlurCompute>(renderer->getDevice(), hwnd, screenWidth, screenHeight);
 
+	//// Init Shadowmaps
 	// Variables for defining shadow map
 	int shadowmapWidth = 4096;	//MAX: 16'384
 	int shadowmapHeight = 4096;
-
+	//Create as much shadowMaps as there are lights * 6 (for point lights)
 	for(int i = 0; i < N_LIGHTS * 6; ++i)
-		//Create as much shadowMaps as there are lights * 6 (for point lights)
 		shadowmap[i] = std::make_unique<ShadowMap>(renderer->getDevice(), shadowmapWidth, shadowmapHeight);
 
+	//// Init lights
 	for (int i = 0; i < N_LIGHTS; ++i)
 	{
-		//Init lights
 		light[i] = std::make_unique<Light>();
 		light[i]->setType(gui_light_type[i]);
 		light[i]->setIntensity(gui_light_intensity[i]);
@@ -100,10 +103,15 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 		light[i]->generatePointLightViewMatrices();
 	}
 
-	//Init orthomesh
-	mesh_orthomesh = std::make_unique<OrthoMesh>(renderer->getDevice(), renderer->getDeviceContext(), screenWidth / 4, screenHeight / 4, screenWidth / 3, screenHeight / 3);
+	//// Init orthomesh
+	orthomesh_debug_shadow_maps = std::make_unique<OrthoMesh>(renderer->getDevice(), renderer->getDeviceContext(), screenWidth / 4, screenHeight / 4, screenWidth / 3, screenHeight / 3);
+	orthomesh_display = std::make_unique<OrthoMesh>(renderer->getDevice(), renderer->getDeviceContext(), screenWidth, screenHeight);
 
-	//Init additional objects
+	//// Init render targets
+	bloom_blur_render_target = std::make_unique<RenderTexture>(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
+	bloom_scene_render_target = std::make_unique<RenderTexture>(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
+
+	//// Init additional objects
 	mesh_light_debug_sphere = std::make_unique<SphereMesh>(renderer->getDevice(), renderer->getDeviceContext());
 	mesh_terrain = std::make_unique<TerrainMesh>(renderer->getDevice(), renderer->getDeviceContext());
 	model_mei = std::make_unique<AModel>(renderer->getDevice(), "res/models/mei/Mei.obj");
@@ -150,7 +158,11 @@ bool App1::render()
 
 	// Perform depth pass
 	depthPass();
-	// Render scene
+	// Render the scene in a render target for post-processing
+	firstPass();
+	// Apply a Bloom post-processing effect
+	bloomPass();
+	// Render final output
 	finalPass();
 
 	return true;
@@ -365,10 +377,11 @@ void App1::depthPass()
 	renderer->resetViewport();
 }
 
-void App1::finalPass()
+void App1::firstPass()
 {
-	// Clear the scene. (default blue colour)
-	renderer->beginScene(0.39f, 0.58f, 0.92f, 1.0f);
+	// In the first pass, render the entire scene to a render target, so we can use it for the bloom post-processing effect
+	bloom_scene_render_target->setRenderTarget(renderer->getDeviceContext());
+	bloom_scene_render_target->clearRenderTarget(renderer->getDeviceContext(), 0.0f, 0.0f, 1.0f, 1.0f);
 	camera->update();
 
 	// get the world, view, projection, and ortho matrices from the camera and Direct3D objects.
@@ -393,14 +406,80 @@ void App1::finalPass()
 	// Render other objects used in multiple passes
 	renderObjects(viewMatrix, projectionMatrix, shadowmap.data(), false);
 
-	//Render 2D meshes
-	worldMatrix = renderer->getWorldMatrix();
-	viewMatrix = camera->getOrthoViewMatrix();
-	projectionMatrix = renderer->getOrthoMatrix();
+	// Reset the render target back to the original back buffer and not the render to texture anymore.
+	renderer->setBackBufferRenderTarget();
+}
+
+void App1::bloomPass()
+{
+	// Clear the scene. (default red colour)
+	bloom_blur_render_target->setRenderTarget(renderer->getDeviceContext());
+	bloom_blur_render_target->clearRenderTarget(renderer->getDeviceContext(), 1.0f, 0.0f, 0.0f, 1.0f);
+
+	// horiontal pass using unblurred copy of the scene
+	horizontal_blur_compute->setShaderParameters(renderer->getDeviceContext(), bloom_scene_render_target->getShaderResourceView());
+	horizontal_blur_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 256.f), sHeight, 1);
+	//ceil((float)sWidth / 256.f) why? Because in the compute shader file, N = 256 threads will be created for each thread group.
+	//Therefore the width is divided to make sure each thread will have some work to do
+	horizontal_blur_compute->unbind(renderer->getDeviceContext());
+
+	// Vertical blur using the horizontal blur result
+	vertical_blur_compute->setShaderParameters(renderer->getDeviceContext(), horizontal_blur_compute->getShaderResourceView());
+	vertical_blur_compute->compute(renderer->getDeviceContext(), sWidth, ceil((float)sHeight / 256.f), 1);
+	vertical_blur_compute->unbind(renderer->getDeviceContext());
+
+	// Reset the render target back to the original back buffer and not the render to texture anymore.
+	renderer->setBackBufferRenderTarget();
+}
+
+void App1::finalPass()
+{
+	// Clear the scene. (default blue colour)
+	renderer->beginScene(0.39f, 0.58f, 0.92f, 1.0f);
+	//camera->update();
+
+	//// get the world, view, projection, and ortho matrices from the camera and Direct3D objects.
+	//XMMATRIX worldMatrix;
+	//XMMATRIX viewMatrix = camera->getViewMatrix();
+	//XMMATRIX projectionMatrix = renderer->getProjectionMatrix();
+
+	////Render the light debug sphere
+	//mesh_light_debug_sphere->sendData(renderer->getDeviceContext());
+	//for (int i = 0; i < N_LIGHTS; ++i)
+	//{
+	//	//If light is off, dont draw sphere
+	//	if (!light[i]->getType()) continue;
+
+	//	XMFLOAT3 light_pos = light[i]->getPosition();
+	//	worldMatrix = XMMatrixScaling(.5f, .5f, .5f);
+	//	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(light_pos.x, light_pos.y, light_pos.z));
+	//	light_debug_shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, light[i].get());
+	//	light_debug_shader->render(renderer->getDeviceContext(), mesh_light_debug_sphere->getIndexCount());
+	//}
+
+	//// Render other objects used in multiple passes
+	//renderObjects(viewMatrix, projectionMatrix, shadowmap.data(), false);
+
+	//// Render 2D meshes
+	XMMATRIX worldMatrix = renderer->getWorldMatrix();
+	XMMATRIX orthoViewMatrix = camera->getOrthoViewMatrix();
+	XMMATRIX orthoMatrix = renderer->getOrthoMatrix();
+
+	//Make sure to not render these meshes in wireframe even if it is toggled on, otherwise we won't see anything (destroys the purpose)
+	renderer->setWireframeMode(false);
+
+	//Render the main scene after post processing
 	renderer->setZBuffer(false);
-	mesh_orthomesh->sendData(renderer->getDeviceContext());
-	texture_shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, shadowmap[gui_shadow_map_display_index]->getDepthMapSRV());
-	texture_shader->render(renderer->getDeviceContext(), mesh_orthomesh->getIndexCount());
+	orthomesh_display->sendData(renderer->getDeviceContext());
+	texture_shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, vertical_blur_compute->getShaderResourceView());
+	texture_shader->render(renderer->getDeviceContext(), orthomesh_display->getIndexCount());
+	renderer->setZBuffer(true);
+
+	//Render the shadow map outputs
+	renderer->setZBuffer(false);
+	orthomesh_debug_shadow_maps->sendData(renderer->getDeviceContext());
+	texture_shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, shadowmap[gui_shadow_map_display_index]->getDepthMapSRV());
+	texture_shader->render(renderer->getDeviceContext(), orthomesh_debug_shadow_maps->getIndexCount());
 	renderer->setZBuffer(true);
 
 	gui();

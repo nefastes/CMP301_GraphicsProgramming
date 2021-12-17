@@ -15,6 +15,8 @@
 #include "DebugNormalsShader.h"
 #include "PlaneTessellationShader.h"
 #include "ModelTessellationShader.h"
+#include "HoriBlurCompute.h"
+#include "VertBlurCompute.h"
 
 #include "TerrainMesh.h"
 
@@ -34,6 +36,8 @@ public:
 protected:
 	bool render();
 	void depthPass();
+	void firstPass();
+	void bloomPass();
 	void finalPass();
 	void gui();
 
@@ -50,9 +54,16 @@ private:
 	std::unique_ptr<ModelTessellationShader> model_tess_shader;
 	std::unique_ptr<TextureShader> texture_shader;
 	std::unique_ptr<DebugNormalsShader> debug_normals_shader;
+	std::unique_ptr<HoriBlurCompute> horizontal_blur_compute;
+	std::unique_ptr<VertBlurCompute> vertical_blur_compute;
 
 	//Shadowmaps
 	std::array<std::unique_ptr<ShadowMap>, N_LIGHTS * 6> shadowmap;	//Create 6 * N_LIGHTS if all of them are point lights
+
+	//Bloom
+	std::unique_ptr<RenderTexture> bloom_blur_render_target;
+	std::unique_ptr<RenderTexture> bloom_scene_render_target;
+	float gui_bloom_treshold;
 
 	//Models
 	std::unique_ptr<AModel> model_mei;
@@ -62,7 +73,8 @@ private:
 	std::unique_ptr<AModel> model_lamp;
 
 	//Meshes
-	std::unique_ptr<OrthoMesh> mesh_orthomesh;
+	std::unique_ptr<OrthoMesh> orthomesh_debug_shadow_maps;
+	std::unique_ptr<OrthoMesh> orthomesh_display;
 	std::unique_ptr<SphereMesh> mesh_light_debug_sphere;
 	std::unique_ptr<TerrainMesh> mesh_terrain;
 
