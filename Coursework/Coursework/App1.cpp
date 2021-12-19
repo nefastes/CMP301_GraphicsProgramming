@@ -47,7 +47,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	BaseApplication::init(hinstance, hwnd, screenWidth, screenHeight, in, VSYNC, FULL_SCREEN);
 
 	//// Load textures
-	textureMgr->loadTexture(L"heightMap", L"res/heightmap7.dds");
+	textureMgr->loadTexture(L"heightMap", L"res/heightmap20.dds");
 	textureMgr->loadTexture(L"brick", L"res/brick1.dds");
 	textureMgr->loadTexture(L"wood", L"res/wood.png");
 	textureMgr->loadTexture(L"grass", L"res/grass_2.jpg");
@@ -448,7 +448,7 @@ void App1::finalPass()
 	//Render the main scene after post processing
 	renderer->setZBuffer(false);
 	orthomesh_display->sendData(renderer->getDeviceContext());
-	texture_shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, vertical_blur_compute->getShaderResourceView());
+	texture_shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, bloom_scene_render_target->getShaderResourceView());
 	texture_shader->render(renderer->getDeviceContext(), orthomesh_display->getIndexCount());
 	renderer->setZBuffer(true);
 
