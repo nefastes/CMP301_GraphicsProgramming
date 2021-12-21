@@ -126,6 +126,9 @@
     <ClCompile Include="BloomThresholdCompute.cpp">
       <Filter>Source Files\Compute</Filter>
     </ClCompile>
+    <ClCompile Include="BloomCombineCompute.cpp">
+      <Filter>Source Files\Compute</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App1.h">
@@ -174,6 +177,9 @@
       <Filter>Header Files\Compute</Filter>
     </ClInclude>
     <ClInclude Include="BloomThresholdCompute.h">
+      <Filter>Header Files\Compute</Filter>
+    </ClInclude>
+    <ClInclude Include="BloomCombineCompute.h">
       <Filter>Header Files\Compute</Filter>
     </ClInclude>
   </ItemGroup>
@@ -275,6 +281,12 @@
       <Filter>Resource Files\Compute</Filter>
     </FxCompile>
     <FxCompile Include="shaders\blur_vertical_cs.hlsl">
+      <Filter>Resource Files\Compute</Filter>
+    </FxCompile>
+    <FxCompile Include="bloom_threshold_cs.hlsl">
+      <Filter>Resource Files\Compute</Filter>
+    </FxCompile>
+    <FxCompile Include="bloom_combine_cs.hlsl">
       <Filter>Resource Files\Compute</Filter>
     </FxCompile>
   </ItemGroup>

@@ -65,6 +65,7 @@ private:
 
 private:
 	ID3D11SamplerState* sampleStateShadow;
+	ID3D11SamplerState* sampleStateHeightMap;
 	ID3D11Buffer* matrixBuffer;
 	ID3D11Buffer* lightBuffer;
 	ID3D11Buffer* HsSettingsBuffer;

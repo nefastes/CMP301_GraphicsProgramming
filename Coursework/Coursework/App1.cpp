@@ -4,7 +4,7 @@
 
 App1::App1() : gui_shadow_map_display_index(0), gui_min_max_LOD(1.f, 15.f), gui_min_max_distance(50.f, 75.f),
 gui_render_normals(false), gui_terrain_texture_sacale(XMFLOAT2(20.f, 20.f)), gui_terrain_height_amplitude(2.875f),
-gui_model_height_amplitude(0.f), gui_bloom_treshold(0.7f)
+gui_model_height_amplitude(0.f), gui_bloom_threshold(0.7f)
 {
 	for (int i = 0; i < N_LIGHTS; ++i)
 	{
@@ -47,7 +47,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	BaseApplication::init(hinstance, hwnd, screenWidth, screenHeight, in, VSYNC, FULL_SCREEN);
 
 	//// Load textures
-	textureMgr->loadTexture(L"heightMap", L"res/heightmap20.dds");
+	textureMgr->loadTexture(L"heightMap", L"res/heightmap7.dds");	//11, 16 are nice
 	textureMgr->loadTexture(L"brick", L"res/brick1.dds");
 	textureMgr->loadTexture(L"wood", L"res/wood.png");
 	textureMgr->loadTexture(L"grass", L"res/grass_2.jpg");
@@ -70,8 +70,10 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	terrain_tess_shader = std::make_unique<PlaneTessellationShader>(renderer->getDevice(), hwnd);
 	model_tess_shader = std::make_unique<ModelTessellationShader>(renderer->getDevice(), hwnd);
 	debug_normals_shader = std::make_unique<DebugNormalsShader>(renderer->getDevice(), hwnd);
+	bloom_threshold_compute = std::make_unique<BloomThresholdCompute>(renderer->getDevice(), hwnd, screenWidth, screenHeight);
 	horizontal_blur_compute = std::make_unique<HoriBlurCompute>(renderer->getDevice(), hwnd, screenWidth, screenHeight);
 	vertical_blur_compute = std::make_unique<VertBlurCompute>(renderer->getDevice(), hwnd, screenWidth, screenHeight);
+	bloom_combine_compute = std::make_unique<BloomCombineCompute>(renderer->getDevice(), hwnd, screenWidth, screenHeight);
 
 	//// Init Shadowmaps
 	// Variables for defining shadow map
@@ -108,7 +110,6 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	orthomesh_display = std::make_unique<OrthoMesh>(renderer->getDevice(), renderer->getDeviceContext(), screenWidth, screenHeight);
 
 	//// Init render targets
-	bloom_blur_render_target = std::make_unique<RenderTexture>(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
 	bloom_scene_render_target = std::make_unique<RenderTexture>(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
 
 	//// Init additional objects
@@ -129,7 +130,6 @@ App1::~App1()
 	// Release the Direct3D object.
 	// Since I'm using smart pointers there isn't the need to delete anything here
 }
-
 
 bool App1::frame()
 {
@@ -412,12 +412,13 @@ void App1::firstPass()
 
 void App1::bloomPass()
 {
-	// Clear the scene. (default red colour)
-	bloom_blur_render_target->setRenderTarget(renderer->getDeviceContext());
-	bloom_blur_render_target->clearRenderTarget(renderer->getDeviceContext(), 1.0f, 0.0f, 0.0f, 1.0f);
+	//Get the pixels that are above the treshhold value
+	bloom_threshold_compute->setShaderParameters(renderer->getDeviceContext(), bloom_scene_render_target->getShaderResourceView(), gui_bloom_threshold);
+	bloom_threshold_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 16.f), ceil((float)sHeight / 16.f), 1);
+	bloom_threshold_compute->unbind(renderer->getDeviceContext());
 
-	// horiontal pass using unblurred copy of the scene
-	horizontal_blur_compute->setShaderParameters(renderer->getDeviceContext(), bloom_scene_render_target->getShaderResourceView());
+	// horiontal pass on bloom target
+	horizontal_blur_compute->setShaderParameters(renderer->getDeviceContext(), bloom_threshold_compute->getShaderResourceView());
 	horizontal_blur_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 256.f), sHeight, 1);
 	//ceil((float)sWidth / 256.f) why? Because in the compute shader file, N = 256 threads will be created for each thread group.
 	//Therefore the width is divided to make sure each thread will have some work to do
@@ -427,6 +428,10 @@ void App1::bloomPass()
 	vertical_blur_compute->setShaderParameters(renderer->getDeviceContext(), horizontal_blur_compute->getShaderResourceView());
 	vertical_blur_compute->compute(renderer->getDeviceContext(), sWidth, ceil((float)sHeight / 256.f), 1);
 	vertical_blur_compute->unbind(renderer->getDeviceContext());
+
+	bloom_combine_compute->setShaderParameters(renderer->getDeviceContext(), bloom_scene_render_target->getShaderResourceView(), vertical_blur_compute->getShaderResourceView());
+	bloom_combine_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 16.f), ceil((float)sHeight / 16.f), 1);
+	bloom_combine_compute->unbind(renderer->getDeviceContext());
 
 	// Reset the render target back to the original back buffer and not the render to texture anymore.
 	renderer->setBackBufferRenderTarget();
@@ -448,7 +453,7 @@ void App1::finalPass()
 	//Render the main scene after post processing
 	renderer->setZBuffer(false);
 	orthomesh_display->sendData(renderer->getDeviceContext());
-	texture_shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, bloom_scene_render_target->getShaderResourceView());
+	texture_shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, bloom_combine_compute->getShaderResourceView());
 	texture_shader->render(renderer->getDeviceContext(), orthomesh_display->getIndexCount());
 	renderer->setZBuffer(true);
 
@@ -508,11 +513,15 @@ void App1::gui()
 	ImGui::SliderFloat2("Texture Scale", &gui_terrain_texture_sacale.x, .1f, 20.f);
 	ImGui::SliderFloat("Height Amplitude", &gui_terrain_height_amplitude, 0.f, 20.f);
 
+	ImGui::Separator();
 	ImGui::Text("Model Mesh Settings:");
 	ImGui::SliderFloat("Tessellation Height Amplitude", &gui_model_height_amplitude, 0.f, 20.f);
 
 	ImGui::Separator();
+	ImGui::Text("Bloom Settings:");
+	ImGui::SliderFloat("Threshold", &gui_bloom_threshold, 0.f, 1.f);
 
+	ImGui::Separator();
 	static int open_light_editor = 0;
 	open_light_editor += ImGui::Selectable("Edit Lights", true);
 	if (open_light_editor % 2)

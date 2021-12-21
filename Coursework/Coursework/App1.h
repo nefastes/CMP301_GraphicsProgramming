@@ -15,8 +15,10 @@
 #include "DebugNormalsShader.h"
 #include "PlaneTessellationShader.h"
 #include "ModelTessellationShader.h"
+#include "BloomThresholdCompute.h"
 #include "HoriBlurCompute.h"
 #include "VertBlurCompute.h"
+#include "BloomCombineCompute.h"
 
 #include "TerrainMesh.h"
 
@@ -54,16 +56,16 @@ private:
 	std::unique_ptr<ModelTessellationShader> model_tess_shader;
 	std::unique_ptr<TextureShader> texture_shader;
 	std::unique_ptr<DebugNormalsShader> debug_normals_shader;
+	std::unique_ptr<BloomThresholdCompute> bloom_threshold_compute;
 	std::unique_ptr<HoriBlurCompute> horizontal_blur_compute;
 	std::unique_ptr<VertBlurCompute> vertical_blur_compute;
+	std::unique_ptr<BloomCombineCompute> bloom_combine_compute;
 
 	//Shadowmaps
 	std::array<std::unique_ptr<ShadowMap>, N_LIGHTS * 6> shadowmap;	//Create 6 * N_LIGHTS if all of them are point lights
 
 	//Bloom
-	std::unique_ptr<RenderTexture> bloom_blur_render_target;
 	std::unique_ptr<RenderTexture> bloom_scene_render_target;
-	float gui_bloom_treshold;
 
 	//Models
 	std::unique_ptr<AModel> model_mei;
@@ -107,6 +109,9 @@ private:
 	XMFLOAT2 gui_terrain_texture_sacale;
 	float gui_terrain_height_amplitude;
 	float gui_model_height_amplitude;
+
+	//Gui Bloom
+	float gui_bloom_threshold;
 };
 
 #endif
