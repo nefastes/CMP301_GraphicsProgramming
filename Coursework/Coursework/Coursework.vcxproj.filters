@@ -129,6 +129,9 @@
     <ClCompile Include="BloomCombineCompute.cpp">
       <Filter>Source Files\Compute</Filter>
     </ClCompile>
+    <ClCompile Include="BloomCompute.cpp">
+      <Filter>Source Files\Compute</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App1.h">
@@ -180,6 +183,9 @@
       <Filter>Header Files\Compute</Filter>
     </ClInclude>
     <ClInclude Include="BloomCombineCompute.h">
+      <Filter>Header Files\Compute</Filter>
+    </ClInclude>
+    <ClInclude Include="BloomCompute.h">
       <Filter>Header Files\Compute</Filter>
     </ClInclude>
   </ItemGroup>
@@ -287,6 +293,9 @@
       <Filter>Resource Files\Compute</Filter>
     </FxCompile>
     <FxCompile Include="bloom_combine_cs.hlsl">
+      <Filter>Resource Files\Compute</Filter>
+    </FxCompile>
+    <FxCompile Include="bloom_cs.hlsl">
       <Filter>Resource Files\Compute</Filter>
     </FxCompile>
   </ItemGroup>

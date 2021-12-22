@@ -168,6 +168,7 @@
   <ItemGroup>
     <ClCompile Include="App1.cpp" />
     <ClCompile Include="BloomCombineCompute.cpp" />
+    <ClCompile Include="BloomCompute.cpp" />
     <ClCompile Include="BloomThresholdCompute.cpp" />
     <ClCompile Include="DebugNormalsShader.cpp" />
     <ClCompile Include="DepthModelTessShader.cpp" />
@@ -188,6 +189,7 @@
   <ItemGroup>
     <ClInclude Include="App1.h" />
     <ClInclude Include="BloomCombineCompute.h" />
+    <ClInclude Include="BloomCompute.h" />
     <ClInclude Include="BloomThresholdCompute.h" />
     <ClInclude Include="DebugNormalsShader.h" />
     <ClInclude Include="DepthModelTessShader.h" />
@@ -211,6 +213,9 @@
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="bloom_combine_cs.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+    </FxCompile>
+    <FxCompile Include="bloom_cs.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
     </FxCompile>
     <FxCompile Include="bloom_threshold_cs.hlsl">
