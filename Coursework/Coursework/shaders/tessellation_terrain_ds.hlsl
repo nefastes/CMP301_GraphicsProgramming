@@ -43,7 +43,6 @@ struct OutputType
 	float3 worldPosition : TEXCOORD1;
     float3 viewVector : TEXCOORD2;
     float4 lightViewPos[N_LIGHTS * 6] : TEXCOORD3;
-    //float4 depthPosition[N_LIGHTS * 6] : TEXCOORD27;
 };
 
 float getHeight(float2 uv)

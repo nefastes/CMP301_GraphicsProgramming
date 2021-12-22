@@ -73,6 +73,9 @@
     <Filter Include="Resource Files\Compute">
       <UniqueIdentifier>{656fcba0-dfc6-4d19-9762-52489b2b7ecb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\Tessellation\Grass">
+      <UniqueIdentifier>{72ac0e19-0ed1-4d65-a0ea-b588ddd351d2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -132,6 +135,9 @@
     <ClCompile Include="BloomCompute.cpp">
       <Filter>Source Files\Compute</Filter>
     </ClCompile>
+    <ClCompile Include="GrassShader.cpp">
+      <Filter>Source Files\Tessellation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App1.h">
@@ -187,6 +193,9 @@
     </ClInclude>
     <ClInclude Include="BloomCompute.h">
       <Filter>Header Files\Compute</Filter>
+    </ClInclude>
+    <ClInclude Include="GrassShader.h">
+      <Filter>Header Files\Tessellation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -297,6 +306,21 @@
     </FxCompile>
     <FxCompile Include="bloom_cs.hlsl">
       <Filter>Resource Files\Compute</Filter>
+    </FxCompile>
+    <FxCompile Include="tessellation_grass_gs.hlsl">
+      <Filter>Resource Files\Tessellation\Grass</Filter>
+    </FxCompile>
+    <FxCompile Include="tessellation_grass_ps.hlsl">
+      <Filter>Resource Files\Tessellation\Grass</Filter>
+    </FxCompile>
+    <FxCompile Include="tessellation_grass_ds.hlsl">
+      <Filter>Resource Files\Tessellation\Grass</Filter>
+    </FxCompile>
+    <FxCompile Include="tessellation_grass_vs.hlsl">
+      <Filter>Resource Files\Tessellation\Grass</Filter>
+    </FxCompile>
+    <FxCompile Include="tessellation_grass_hs.hlsl">
+      <Filter>Resource Files\Tessellation\Grass</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

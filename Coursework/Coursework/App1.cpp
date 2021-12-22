@@ -75,6 +75,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	vertical_blur_compute = std::make_unique<VertBlurCompute>(renderer->getDevice(), hwnd, screenWidth, screenHeight);
 	bloom_combine_compute = std::make_unique<BloomCombineCompute>(renderer->getDevice(), hwnd, screenWidth, screenHeight);
 	bloom_compute = std::make_unique<BloomCompute>(renderer->getDevice(), hwnd, screenWidth, screenHeight);
+	grass_shader = std::make_unique<GrassShader>(renderer->getDevice(), hwnd);
 
 	//// Init Shadowmaps
 	// Variables for defining shadow map
@@ -189,6 +190,10 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 			textureMgr->getTexture(L"grass"), textureMgr->getTexture(L"heightMap"), gui_min_max_LOD, gui_min_max_distance, gui_terrain_texture_sacale,
 			gui_terrain_height_amplitude, maps, light.data(), camera, gui_render_normals);
 		terrain_tess_shader->render(renderer->getDeviceContext(), mesh_terrain->getIndexCount());
+
+		/*grass_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
+			textureMgr->getTexture(L"heightMap"), gui_min_max_LOD, gui_min_max_distance, gui_terrain_height_amplitude, camera);
+		grass_shader->render(renderer->getDeviceContext(), mesh_terrain->getIndexCount());*/
 	}
 
 	//Rocks
@@ -279,9 +284,11 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 	}
 	else
 	{
+		//renderer->setAlphaBlending(true);
 		light_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
 			textureMgr->getTexture(L"model_lamp_diffuse"), maps, light.data(), camera);
 		light_shader->render(renderer->getDeviceContext(), model_lamp->getIndexCount());
+		//renderer->setAlphaBlending(false);
 		if (gui_render_normals)
 		{
 			debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj, XMFLOAT3(0.1f, 0.1f, 0.1f));
@@ -382,7 +389,7 @@ void App1::firstPass()
 {
 	// In the first pass, render the entire scene to a render target, so we can use it for the bloom post-processing effect
 	bloom_scene_render_target->setRenderTarget(renderer->getDeviceContext());
-	bloom_scene_render_target->clearRenderTarget(renderer->getDeviceContext(), 0.0f, 0.0f, 0.0f, 1.0f);
+	bloom_scene_render_target->clearRenderTarget(renderer->getDeviceContext(), 0.0f, 0.0f, .2f, 1.0f);
 	camera->update();
 
 	// get the world, view, projection, and ortho matrices from the camera and Direct3D objects.

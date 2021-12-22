@@ -20,6 +20,7 @@
 #include "VertBlurCompute.h"
 #include "BloomCombineCompute.h"
 #include "BloomCompute.h"
+#include "GrassShader.h"
 
 #include "TerrainMesh.h"
 
@@ -62,6 +63,7 @@ private:
 	std::unique_ptr<VertBlurCompute> vertical_blur_compute;
 	std::unique_ptr<BloomCombineCompute> bloom_combine_compute;
 	std::unique_ptr<BloomCompute> bloom_compute;
+	std::unique_ptr<GrassShader> grass_shader;
 
 	//Shadowmaps
 	std::array<std::unique_ptr<ShadowMap>, N_LIGHTS * 6> shadowmap;	//Create 6 * N_LIGHTS if all of them are point lights

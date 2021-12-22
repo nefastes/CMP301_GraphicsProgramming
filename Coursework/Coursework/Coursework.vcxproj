@@ -174,6 +174,7 @@
     <ClCompile Include="DepthModelTessShader.cpp" />
     <ClCompile Include="DepthShader.cpp" />
     <ClCompile Include="DepthTerrainTessShader.cpp" />
+    <ClCompile Include="GrassShader.cpp" />
     <ClCompile Include="HoriBlurCompute.cpp" />
     <ClCompile Include="LightDebugShader.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -195,6 +196,7 @@
     <ClInclude Include="DepthModelTessShader.h" />
     <ClInclude Include="DepthShader.h" />
     <ClInclude Include="DepthTerrainTessShader.h" />
+    <ClInclude Include="GrassShader.h" />
     <ClInclude Include="HoriBlurCompute.h" />
     <ClInclude Include="LightDebugShader.h" />
     <ClInclude Include="PlaneTessellationColourShader.h" />
@@ -220,6 +222,12 @@
     </FxCompile>
     <FxCompile Include="bloom_threshold_cs.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+    </FxCompile>
+    <FxCompile Include="tessellation_grass_ds.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Domain</ShaderType>
+    </FxCompile>
+    <FxCompile Include="tessellation_grass_gs.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Geometry</ShaderType>
     </FxCompile>
     <FxCompile Include="shaders\blur_horizontal_cs.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
@@ -315,6 +323,15 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
     </FxCompile>
     <FxCompile Include="shaders\texture_vs.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+    </FxCompile>
+    <FxCompile Include="tessellation_grass_hs.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Hull</ShaderType>
+    </FxCompile>
+    <FxCompile Include="tessellation_grass_ps.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="tessellation_grass_vs.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
     </FxCompile>
     <FxCompile Include="tessellation_model_depth_ds.hlsl">

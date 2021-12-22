@@ -28,21 +28,6 @@ void main(triangle InputType input[3], inout LineStream<OutputType> lineStream)
 {
 	OutputType output;
     
-    //for (int i = 0; i < 3; ++i)
-    //{
-    //    output.position = input[i].position;
-    //    output.position = mul(output.position, worldMatrix);
-    //    output.position = mul(output.position, viewMatrix);
-    //    output.position = mul(output.position, projectionMatrix);
-    //    lineStream.Append(output);
-    //    output.position = input[i].position + float4(input[i].normal, 0.f);
-    //    output.position = mul(output.position, worldMatrix);
-    //    output.position = mul(output.position, viewMatrix);
-    //    output.position = mul(output.position, projectionMatrix);
-    //    lineStream.Append(output);
-    //    lineStream.RestartStrip();
-    //}
-    
     float4 vertex = (input[0].position + input[1].position + input[2].position) / 3.f;
     float4 normal = float4((input[0].normal + input[1].normal + input[2].normal) / 3.f, 0.f);
     output.normal = normal.xyz;
