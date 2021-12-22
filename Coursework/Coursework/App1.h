@@ -114,6 +114,7 @@ private:
 
 	//Gui Bloom
 	float gui_bloom_threshold;
+	int gui_bloom_blur_iterations;
 };
 
 #endif

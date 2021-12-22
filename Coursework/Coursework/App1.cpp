@@ -4,7 +4,7 @@
 
 App1::App1() : gui_shadow_map_display_index(0), gui_min_max_LOD(1.f, 15.f), gui_min_max_distance(50.f, 75.f),
 gui_render_normals(false), gui_terrain_texture_sacale(XMFLOAT2(20.f, 20.f)), gui_terrain_height_amplitude(2.875f),
-gui_model_height_amplitude(0.f), gui_bloom_threshold(0.7f)
+gui_model_height_amplitude(0.f), gui_bloom_threshold(0.7f), gui_bloom_blur_iterations(1)
 {
 	for (int i = 0; i < N_LIGHTS; ++i)
 	{
@@ -289,48 +289,48 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 		}
 	}
 
-	//Mei
-	world = XMMatrixRotationAxis(XMVectorSet(0.f, 1.f, 0.f, 1.f), AI_DEG_TO_RAD(95.f));
-	world = XMMatrixMultiply(world, XMMatrixScaling(0.075f, 0.075f, 0.075f));
-	world = XMMatrixMultiply(world, XMMatrixTranslation(20.f, -20.f, 7.5f));
-	model_mei->sendData(renderer->getDeviceContext());
-	if (renderDepth)
-	{
-		depth_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
-		depth_shader->render(renderer->getDeviceContext(), model_mei->getIndexCount());
-	}
-	else
-	{
-		light_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
-			textureMgr->getTexture(L"model_mei_diffuse"), maps, light.data(), camera);
-		light_shader->render(renderer->getDeviceContext(), model_mei->getIndexCount());
-		if (gui_render_normals)
-		{
-			debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj, XMFLOAT3(0.075f, 0.075f, 0.075f));
-			debug_normals_shader->render(renderer->getDeviceContext(), model_mei->getIndexCount());
-		}
-	}
+	////Mei
+	//world = XMMatrixRotationAxis(XMVectorSet(0.f, 1.f, 0.f, 1.f), AI_DEG_TO_RAD(95.f));
+	//world = XMMatrixMultiply(world, XMMatrixScaling(0.075f, 0.075f, 0.075f));
+	//world = XMMatrixMultiply(world, XMMatrixTranslation(20.f, -20.f, 7.5f));
+	//model_mei->sendData(renderer->getDeviceContext());
+	//if (renderDepth)
+	//{
+	//	depth_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
+	//	depth_shader->render(renderer->getDeviceContext(), model_mei->getIndexCount());
+	//}
+	//else
+	//{
+	//	light_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
+	//		textureMgr->getTexture(L"model_mei_diffuse"), maps, light.data(), camera);
+	//	light_shader->render(renderer->getDeviceContext(), model_mei->getIndexCount());
+	//	if (gui_render_normals)
+	//	{
+	//		debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj, XMFLOAT3(0.075f, 0.075f, 0.075f));
+	//		debug_normals_shader->render(renderer->getDeviceContext(), model_mei->getIndexCount());
+	//	}
+	//}
 
-	//Totoro
-	world = XMMatrixScaling(12.f, 12.f, 12.f);
-	world = XMMatrixMultiply(world, XMMatrixTranslation(0.f, -20.f, 13.f));
-	model_totoro->sendData(renderer->getDeviceContext());
-	if (renderDepth)
-	{
-		depth_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
-		depth_shader->render(renderer->getDeviceContext(), model_totoro->getIndexCount());
-	}
-	else
-	{
-		light_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
-			textureMgr->getTexture(L"model_totoro_diffuse"), maps, light.data(), camera);
-		light_shader->render(renderer->getDeviceContext(), model_totoro->getIndexCount());
-		if (gui_render_normals)
-		{
-			debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj, XMFLOAT3(12.f, 12.f, 12.f));
-			debug_normals_shader->render(renderer->getDeviceContext(), model_totoro->getIndexCount());
-		}
-	}
+	////Totoro
+	//world = XMMatrixScaling(12.f, 12.f, 12.f);
+	//world = XMMatrixMultiply(world, XMMatrixTranslation(0.f, -20.f, 13.f));
+	//model_totoro->sendData(renderer->getDeviceContext());
+	//if (renderDepth)
+	//{
+	//	depth_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
+	//	depth_shader->render(renderer->getDeviceContext(), model_totoro->getIndexCount());
+	//}
+	//else
+	//{
+	//	light_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
+	//		textureMgr->getTexture(L"model_totoro_diffuse"), maps, light.data(), camera);
+	//	light_shader->render(renderer->getDeviceContext(), model_totoro->getIndexCount());
+	//	if (gui_render_normals)
+	//	{
+	//		debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj, XMFLOAT3(12.f, 12.f, 12.f));
+	//		debug_normals_shader->render(renderer->getDeviceContext(), model_totoro->getIndexCount());
+	//	}
+	//}
 }
 
 void App1::depthPass()
@@ -413,30 +413,36 @@ void App1::firstPass()
 
 void App1::bloomPass()
 {
-	////Get the pixels that are above the treshhold value
-	//bloom_threshold_compute->setShaderParameters(renderer->getDeviceContext(), bloom_scene_render_target->getShaderResourceView(), gui_bloom_threshold);
-	//bloom_threshold_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 16.f), ceil((float)sHeight / 16.f), 1);
-	//bloom_threshold_compute->unbind(renderer->getDeviceContext());
+	//Get the pixels that are above the treshhold value
+	bloom_threshold_compute->setShaderParameters(renderer->getDeviceContext(), bloom_scene_render_target->getShaderResourceView(), gui_bloom_threshold);
+	bloom_threshold_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 16.f), ceil((float)sHeight / 16.f), 1);
+	bloom_threshold_compute->unbind(renderer->getDeviceContext());
 
-	//// horiontal pass on bloom target
-	//horizontal_blur_compute->setShaderParameters(renderer->getDeviceContext(), bloom_threshold_compute->getShaderResourceView());
-	//horizontal_blur_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 256.f), sHeight, 1);
-	////ceil((float)sWidth / 256.f) why? Because in the compute shader file, N = 256 threads will be created for each thread group.
-	////Therefore the width is divided to make sure each thread will have some work to do
-	//horizontal_blur_compute->unbind(renderer->getDeviceContext());
+	ID3D11ShaderResourceView* buffer_to_blur = bloom_threshold_compute->getShaderResourceView();
+	for (int i = 0; i < gui_bloom_blur_iterations; ++i)
+	{
+		// horiontal pass on bloom target
+		horizontal_blur_compute->setShaderParameters(renderer->getDeviceContext(), buffer_to_blur);
+		horizontal_blur_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 256.f), sHeight, 1);
+		//ceil((float)sWidth / 256.f) why? Because in the compute shader file, N = 256 threads will be created for each thread group.
+		//Therefore the width is divided to make sure each thread will have some work to do
+		horizontal_blur_compute->unbind(renderer->getDeviceContext());
 
-	//// Vertical blur using the horizontal blur result
-	//vertical_blur_compute->setShaderParameters(renderer->getDeviceContext(), horizontal_blur_compute->getShaderResourceView());
-	//vertical_blur_compute->compute(renderer->getDeviceContext(), sWidth, ceil((float)sHeight / 256.f), 1);
-	//vertical_blur_compute->unbind(renderer->getDeviceContext());
+		// Vertical blur using the horizontal blur result
+		vertical_blur_compute->setShaderParameters(renderer->getDeviceContext(), horizontal_blur_compute->getShaderResourceView());
+		vertical_blur_compute->compute(renderer->getDeviceContext(), sWidth, ceil((float)sHeight / 256.f), 1);
+		vertical_blur_compute->unbind(renderer->getDeviceContext());
 
-	//bloom_combine_compute->setShaderParameters(renderer->getDeviceContext(), bloom_scene_render_target->getShaderResourceView(), vertical_blur_compute->getShaderResourceView());
-	//bloom_combine_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 16.f), ceil((float)sHeight / 16.f), 1);
-	//bloom_combine_compute->unbind(renderer->getDeviceContext());
+		buffer_to_blur = vertical_blur_compute->getShaderResourceView();
+	}
 
-	bloom_compute->setShaderParameters(renderer->getDeviceContext(), bloom_scene_render_target->getShaderResourceView(), gui_bloom_threshold);
+	bloom_combine_compute->setShaderParameters(renderer->getDeviceContext(), bloom_scene_render_target->getShaderResourceView(), buffer_to_blur);
+	bloom_combine_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 16.f), ceil((float)sHeight / 16.f), 1);
+	bloom_combine_compute->unbind(renderer->getDeviceContext());
+
+	/*bloom_compute->setShaderParameters(renderer->getDeviceContext(), bloom_scene_render_target->getShaderResourceView(), gui_bloom_threshold);
 	bloom_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 16.f), ceil((float)sHeight / 16.f), 1);
-	bloom_compute->unbind(renderer->getDeviceContext());
+	bloom_compute->unbind(renderer->getDeviceContext());*/
 
 	// Reset the render target back to the original back buffer and not the render to texture anymore.
 	renderer->setBackBufferRenderTarget();
@@ -458,7 +464,7 @@ void App1::finalPass()
 	//Render the main scene after post processing
 	renderer->setZBuffer(false);
 	orthomesh_display->sendData(renderer->getDeviceContext());
-	texture_shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, bloom_compute->getShaderResourceView());
+	texture_shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, bloom_combine_compute->getShaderResourceView());
 	texture_shader->render(renderer->getDeviceContext(), orthomesh_display->getIndexCount());
 	renderer->setZBuffer(true);
 
@@ -525,6 +531,7 @@ void App1::gui()
 	ImGui::Separator();
 	ImGui::Text("Bloom Settings:");
 	ImGui::SliderFloat("Threshold", &gui_bloom_threshold, 0.f, 1.f);
+	ImGui::SliderInt("Blur Passes", &gui_bloom_blur_iterations, 1, 20);
 
 	ImGui::Separator();
 	static int open_light_editor = 0;
