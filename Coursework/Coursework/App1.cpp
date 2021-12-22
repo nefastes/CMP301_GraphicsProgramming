@@ -420,36 +420,36 @@ void App1::firstPass()
 
 void App1::bloomPass()
 {
-	//Get the pixels that are above the treshhold value
-	bloom_threshold_compute->setShaderParameters(renderer->getDeviceContext(), bloom_scene_render_target->getShaderResourceView(), gui_bloom_threshold);
-	bloom_threshold_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 16.f), ceil((float)sHeight / 16.f), 1);
-	bloom_threshold_compute->unbind(renderer->getDeviceContext());
+	////Get the pixels that are above the treshhold value
+	//bloom_threshold_compute->setShaderParameters(renderer->getDeviceContext(), bloom_scene_render_target->getShaderResourceView(), gui_bloom_threshold);
+	//bloom_threshold_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 16.f), ceil((float)sHeight / 16.f), 1);
+	//bloom_threshold_compute->unbind(renderer->getDeviceContext());
 
-	ID3D11ShaderResourceView* buffer_to_blur = bloom_threshold_compute->getShaderResourceView();
-	for (int i = 0; i < gui_bloom_blur_iterations; ++i)
-	{
-		// horiontal pass on bloom target
-		horizontal_blur_compute->setShaderParameters(renderer->getDeviceContext(), buffer_to_blur);
-		horizontal_blur_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 256.f), sHeight, 1);
-		//ceil((float)sWidth / 256.f) why? Because in the compute shader file, N = 256 threads will be created for each thread group.
-		//Therefore the width is divided to make sure each thread will have some work to do
-		horizontal_blur_compute->unbind(renderer->getDeviceContext());
+	//ID3D11ShaderResourceView* buffer_to_blur = bloom_threshold_compute->getShaderResourceView();
+	//for (int i = 0; i < gui_bloom_blur_iterations; ++i)
+	//{
+	//	// horiontal pass on bloom target
+	//	horizontal_blur_compute->setShaderParameters(renderer->getDeviceContext(), buffer_to_blur);
+	//	horizontal_blur_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 256.f), sHeight, 1);
+	//	//ceil((float)sWidth / 256.f) why? Because in the compute shader file, N = 256 threads will be created for each thread group.
+	//	//Therefore the width is divided to make sure each thread will have some work to do
+	//	horizontal_blur_compute->unbind(renderer->getDeviceContext());
 
-		// Vertical blur using the horizontal blur result
-		vertical_blur_compute->setShaderParameters(renderer->getDeviceContext(), horizontal_blur_compute->getShaderResourceView());
-		vertical_blur_compute->compute(renderer->getDeviceContext(), sWidth, ceil((float)sHeight / 256.f), 1);
-		vertical_blur_compute->unbind(renderer->getDeviceContext());
+	//	// Vertical blur using the horizontal blur result
+	//	vertical_blur_compute->setShaderParameters(renderer->getDeviceContext(), horizontal_blur_compute->getShaderResourceView());
+	//	vertical_blur_compute->compute(renderer->getDeviceContext(), sWidth, ceil((float)sHeight / 256.f), 1);
+	//	vertical_blur_compute->unbind(renderer->getDeviceContext());
 
-		buffer_to_blur = vertical_blur_compute->getShaderResourceView();
-	}
+	//	buffer_to_blur = vertical_blur_compute->getShaderResourceView();
+	//}
 
-	bloom_combine_compute->setShaderParameters(renderer->getDeviceContext(), bloom_scene_render_target->getShaderResourceView(), buffer_to_blur);
-	bloom_combine_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 16.f), ceil((float)sHeight / 16.f), 1);
-	bloom_combine_compute->unbind(renderer->getDeviceContext());
+	//bloom_combine_compute->setShaderParameters(renderer->getDeviceContext(), bloom_scene_render_target->getShaderResourceView(), buffer_to_blur);
+	//bloom_combine_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 16.f), ceil((float)sHeight / 16.f), 1);
+	//bloom_combine_compute->unbind(renderer->getDeviceContext());
 
-	/*bloom_compute->setShaderParameters(renderer->getDeviceContext(), bloom_scene_render_target->getShaderResourceView(), gui_bloom_threshold);
+	bloom_compute->setShaderParameters(renderer->getDeviceContext(), bloom_scene_render_target->getShaderResourceView(), gui_bloom_threshold);
 	bloom_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 16.f), ceil((float)sHeight / 16.f), 1);
-	bloom_compute->unbind(renderer->getDeviceContext());*/
+	bloom_compute->unbind(renderer->getDeviceContext());
 
 	// Reset the render target back to the original back buffer and not the render to texture anymore.
 	renderer->setBackBufferRenderTarget();
@@ -471,7 +471,7 @@ void App1::finalPass()
 	//Render the main scene after post processing
 	renderer->setZBuffer(false);
 	orthomesh_display->sendData(renderer->getDeviceContext());
-	texture_shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, bloom_combine_compute->getShaderResourceView());
+	texture_shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, bloom_compute->getShaderResourceView());
 	texture_shader->render(renderer->getDeviceContext(), orthomesh_display->getIndexCount());
 	renderer->setZBuffer(true);
 
