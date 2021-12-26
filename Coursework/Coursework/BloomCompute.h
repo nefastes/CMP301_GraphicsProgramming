@@ -7,14 +7,15 @@ private:
 	struct SettingsBufferType
 	{
 		float treshold_value;
-		XMFLOAT3 padding;
+		int num_blur_passes;
+		XMFLOAT2 padding;
 	};
 
 public:
 	BloomCompute(ID3D11Device* device, HWND hwnd, int screen_width, int screen_height);
 	~BloomCompute();
 
-	void setShaderParameters(ID3D11DeviceContext* device_context, ID3D11ShaderResourceView* buffer_scene, float treshold_value);
+	void setShaderParameters(ID3D11DeviceContext* device_context, ID3D11ShaderResourceView* buffer_scene, float treshold_value, int num_blur_passes);
 	ID3D11ShaderResourceView* getShaderResourceView() { return srv; }
 	void unbind(ID3D11DeviceContext* device_context);
 

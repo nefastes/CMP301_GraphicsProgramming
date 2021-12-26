@@ -447,7 +447,7 @@ void App1::bloomPass()
 	//bloom_combine_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 16.f), ceil((float)sHeight / 16.f), 1);
 	//bloom_combine_compute->unbind(renderer->getDeviceContext());
 
-	bloom_compute->setShaderParameters(renderer->getDeviceContext(), bloom_scene_render_target->getShaderResourceView(), gui_bloom_threshold);
+	bloom_compute->setShaderParameters(renderer->getDeviceContext(), bloom_scene_render_target->getShaderResourceView(), gui_bloom_threshold, gui_bloom_blur_iterations);
 	bloom_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 16.f), ceil((float)sHeight / 16.f), 1);
 	bloom_compute->unbind(renderer->getDeviceContext());
 

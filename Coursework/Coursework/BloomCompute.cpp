@@ -10,14 +10,15 @@ BloomCompute::~BloomCompute()
 {
 }
 
-void BloomCompute::setShaderParameters(ID3D11DeviceContext* device_context, ID3D11ShaderResourceView* buffer_scene, float threshold_value)
+void BloomCompute::setShaderParameters(ID3D11DeviceContext* device_context, ID3D11ShaderResourceView* buffer_scene, float threshold_value, int num_blur_passes)
 {
 	//Send settings buffer to compute shader
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	device_context->Map(settingsBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	SettingsBufferType* settingsPtr = (SettingsBufferType*)mappedResource.pData;
 	settingsPtr->treshold_value = threshold_value;
-	settingsPtr->padding = XMFLOAT3(0.f, 0.f, 0.f);
+	settingsPtr->num_blur_passes = num_blur_passes;
+	settingsPtr->padding = XMFLOAT2(0.f, 0.f);
 	device_context->Unmap(settingsBuffer, 0);
 	device_context->CSSetConstantBuffers(0, 1, &settingsBuffer);
 	//Send the buffer to be blurred to the compute shader
