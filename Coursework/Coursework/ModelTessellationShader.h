@@ -37,6 +37,8 @@ class ModelTessellationShader : public BaseShader
 		XMFLOAT4 tessellationCenterPosition;
 		XMFLOAT2 minMaxLOD;
 		XMFLOAT2 minMaxDistance;
+		XMFLOAT2 tessellation_factors;
+		XMFLOAT2 padding;
 	};
 
 	struct DsSettingsBufferType
@@ -52,7 +54,7 @@ public:
 
 	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& projection,
 		ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* heightMap, ID3D11ShaderResourceView* normalMap, XMFLOAT2& minMaxLOD, XMFLOAT2& minMaxDistance,
-		float height_amplitude, std::unique_ptr<ShadowMap>* maps, std::unique_ptr<Light>* light, Camera* camera, bool render_normals);
+		XMFLOAT2& tessellation_factors, float height_amplitude, std::unique_ptr<ShadowMap>* maps, std::unique_ptr<Light>* light, Camera* camera, bool render_normals);
 
 private:
 	void initShader(const wchar_t* vsFilename, const wchar_t* psFilename);

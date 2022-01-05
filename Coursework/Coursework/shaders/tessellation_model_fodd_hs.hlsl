@@ -5,6 +5,8 @@ cbuffer SettingsBuffer : register(b0)
 	float4 tessellationCenterPosition;
 	float2 minMaxLOD;
 	float2 minMaxDistance;
+	float2 tessellation_factors;
+	float2 padding;
 }
 
 struct InputType
@@ -71,21 +73,22 @@ ConstantOutputType PatchConstantFunction(InputPatch<InputType, 3> inputPatch, ui
 	//	ComputePatchLOD(midPoints[3])
 	//};
     
- //   //This patch always has an interior matching the patch LOD
+	//   //This patch always has an interior matching the patch LOD
 	//output.inside = dist[0];
     
- //   //For the edges its more complex as we have to match the neighboring patches.
- //   //The rule in this case is:
- //   //
- //   // - If the nieghbor patch is of a lower LOD we pick that LOD as the edge for this patch.
- //   //
- //   // - If the neighbor patch is a heigher LOD then we stick with our LOD and expect them to blend down towards us
+	//   //For the edges its more complex as we have to match the neighboring patches.
+	//   //The rule in this case is:
+	//   //
+	//   // - If the nieghbor patch is of a lower LOD we pick that LOD as the edge for this patch.
+	//   //
+	//   // - If the neighbor patch is a heigher LOD then we stick with our LOD and expect them to blend down towards us
 	//output.edges[0] = min(dist[0], dist[3]);
 	//output.edges[1] = min(dist[0], dist[2]);
 	//output.edges[2] = min(dist[0], dist[1]);
 	
-	output.inside = 3;
-	output.edges[0] = output.edges[1] = output.edges[2] = 2;
+	//For now only non-dynamic tessellation is supported on models
+	output.inside = tessellation_factors.x;
+	output.edges[0] = output.edges[1] = output.edges[2] = tessellation_factors.y;
     
     return output;
 }

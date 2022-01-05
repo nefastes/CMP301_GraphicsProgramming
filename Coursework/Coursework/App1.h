@@ -46,7 +46,12 @@ protected:
 	void gui();
 
 private:
-	void renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique_ptr<ShadowMap>* map, bool renderDepth);
+	void renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique_ptr<ShadowMap>* maps, bool renderDepth);
+	void renderTessellatedModel(AModel* model, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& proj, const XMFLOAT3& scale,
+		std::unique_ptr<ShadowMap>* maps, ID3D11ShaderResourceView* texture_diffuse, ID3D11ShaderResourceView* texture_normal,
+		ID3D11ShaderResourceView* texture_height, bool renderDepth);
+	void renderTessellatedTerrain(TerrainMesh* terrain, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& proj,
+		std::unique_ptr<ShadowMap>* maps, ID3D11ShaderResourceView* texture_diffuse, ID3D11ShaderResourceView* heightmap, bool renderDepth);
 
 	//Shaders
 	std::unique_ptr<ShadowShader> light_shader;
@@ -77,17 +82,20 @@ private:
 	std::unique_ptr<AModel> model_rock;
 	std::unique_ptr<AModel> model_bench;
 	std::unique_ptr<AModel> model_lamp;
+	std::unique_ptr<AModel> model_pillar;
 
 	//Meshes
 	std::unique_ptr<OrthoMesh> orthomesh_debug_shadow_maps;
 	std::unique_ptr<OrthoMesh> orthomesh_display;
 	std::unique_ptr<SphereMesh> mesh_light_debug_sphere;
 	std::unique_ptr<TerrainMesh> mesh_terrain;
+	std::unique_ptr<TerrainMesh> mesh_floor;
 
 	//General guis
 	bool gui_render_normals;
 
 	//up to MAX_N_LIGHTS lights, gui for the light properties 
+	bool gui_render_light_sphere;
 	std::array<std::unique_ptr<Light>, N_LIGHTS> light;
 	std::array<bool, N_LIGHTS> gui_light_drop_menu_activate;
 	std::array<XMFLOAT2, N_LIGHTS> gui_light_scene_dimensions;
@@ -112,6 +120,7 @@ private:
 	XMFLOAT2 gui_min_max_distance;
 	XMFLOAT2 gui_terrain_texture_sacale;
 	float gui_terrain_height_amplitude;
+	XMFLOAT2 gui_model_tessellation_factors;
 	float gui_model_height_amplitude;
 
 	//Gui Bloom

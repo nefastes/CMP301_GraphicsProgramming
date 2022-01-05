@@ -94,7 +94,7 @@ void DepthModelTessShader::initShader(const wchar_t* vsFilename, const wchar_t* 
 }
 
 void DepthModelTessShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix,
-	ID3D11ShaderResourceView* heightMap, XMFLOAT2& minMaxLOD, XMFLOAT2& minMaxDistance, float height_amplitude, Camera* camera)
+	ID3D11ShaderResourceView* heightMap, XMFLOAT2& minMaxLOD, XMFLOAT2& minMaxDistance, XMFLOAT2& tessellation_factors, float height_amplitude, Camera* camera)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -111,6 +111,8 @@ void DepthModelTessShader::setShaderParameters(ID3D11DeviceContext* deviceContex
 	HsSettingsPtr->tessellationCenterPosition = XMFLOAT4(cameraPos.x, cameraPos.y, cameraPos.z, 1.f);
 	HsSettingsPtr->minMaxLOD = minMaxLOD;
 	HsSettingsPtr->minMaxDistance = minMaxDistance;
+	HsSettingsPtr->tessellation_factors = tessellation_factors;
+	HsSettingsPtr->padding = XMFLOAT2(0.f, 0.f);
 	deviceContext->Unmap(HsSettingsBuffer, 0);
 	deviceContext->HSSetConstantBuffers(0, 1, &HsSettingsBuffer);
 

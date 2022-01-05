@@ -23,6 +23,8 @@ class DepthModelTessShader : public BaseShader
 		XMFLOAT4 tessellationCenterPosition;
 		XMFLOAT2 minMaxLOD;
 		XMFLOAT2 minMaxDistance;
+		XMFLOAT2 tessellation_factors;
+		XMFLOAT2 padding;
 	};
 
 	struct DsSettingsBufferType
@@ -37,13 +39,12 @@ public:
 	~DepthModelTessShader();
 
 	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& projection,
-		ID3D11ShaderResourceView* heightMap, XMFLOAT2& minMaxLOD, XMFLOAT2& minMaxDistance, float height_amplitude, Camera* camera);
+		ID3D11ShaderResourceView* heightMap, XMFLOAT2& minMaxLOD, XMFLOAT2& minMaxDistance, XMFLOAT2& tessellation_factors, float height_amplitude, Camera* camera);
 
 private:
 	void initShader(const wchar_t* vs, const wchar_t* ps);
 
 private:
-	ID3D11SamplerState* sampleStateShadow;
 	ID3D11Buffer* matrixBuffer;
 	ID3D11Buffer* HsSettingsBuffer;
 	ID3D11Buffer* DsSettingsBuffer;

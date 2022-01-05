@@ -4,7 +4,8 @@
 
 App1::App1() : gui_shadow_map_display_index(0), gui_min_max_LOD(1.f, 15.f), gui_min_max_distance(50.f, 75.f),
 gui_render_normals(false), gui_terrain_texture_sacale(XMFLOAT2(20.f, 20.f)), gui_terrain_height_amplitude(2.875f),
-gui_model_height_amplitude(0.f), gui_bloom_threshold(0.7f), gui_bloom_blur_iterations(1)
+gui_model_height_amplitude(0.f), gui_bloom_threshold(0.7f), gui_bloom_blur_iterations(1), gui_render_light_sphere(true),
+gui_model_tessellation_factors(XMFLOAT2(1.f, 1.f))
 {
 	for (int i = 0; i < N_LIGHTS; ++i)
 	{
@@ -48,9 +49,11 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 
 	//// Load textures
 	textureMgr->loadTexture(L"heightMap", L"res/heightmap7.dds");	//11, 16 are nice
+	textureMgr->loadTexture(L"noHeightMap", L"res/heightmap0.jpg");	//11, 16 are nice
 	textureMgr->loadTexture(L"brick", L"res/brick1.dds");
 	textureMgr->loadTexture(L"wood", L"res/wood.png");
 	textureMgr->loadTexture(L"grass", L"res/grass_2.jpg");
+	textureMgr->loadTexture(L"marble", L"res/Seamless_Aegean_Marble_Texture.jpg");
 	textureMgr->loadTexture(L"model_mei_diffuse", L"res/models/mei/Mei_TEX.png");
 	textureMgr->loadTexture(L"model_totoro_diffuse", L"res/models/totoro/Totoro_Map.png");
 	textureMgr->loadTexture(L"model_rock_diffuse", L"res/models/rock_model_1/textures/Rock_1_Diffuse.jpg");
@@ -59,6 +62,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	textureMgr->loadTexture(L"model_bench_diffuse", L"res/models/bench/benchs_diffuse.png");
 	textureMgr->loadTexture(L"model_bench_normal", L"res/models/bench/benchs_normal.png");
 	textureMgr->loadTexture(L"model_lamp_diffuse", L"res/models/lamp2/diffuse.png");
+	textureMgr->loadTexture(L"model_pillar_diffuse", L"res/models/pillar/Textures/Marble_Base_Color.jpg");
 
 	//// Init shaders
 	texture_shader = std::make_unique<TextureShader>(renderer->getDevice(), hwnd);
@@ -117,11 +121,13 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	//// Init additional objects
 	mesh_light_debug_sphere = std::make_unique<SphereMesh>(renderer->getDevice(), renderer->getDeviceContext());
 	mesh_terrain = std::make_unique<TerrainMesh>(renderer->getDevice(), renderer->getDeviceContext());
+	mesh_floor = std::make_unique<TerrainMesh>(renderer->getDevice(), renderer->getDeviceContext());
 	model_mei = std::make_unique<AModel>(renderer->getDevice(), "res/models/mei/Mei.obj");
 	model_totoro = std::make_unique<AModel>(renderer->getDevice(), "res/models/totoro/totoro.fbx");
 	model_rock = std::make_unique<AModel>(renderer->getDevice(), "res/models/rock_model_1/rock.obj");
 	model_bench = std::make_unique<AModel>(renderer->getDevice(), "res/models/bench/bench.obj");
 	model_lamp = std::make_unique<AModel>(renderer->getDevice(), "res/models/lamp2/vsl.obj");
+	model_pillar = std::make_unique<AModel>(renderer->getDevice(), "res/models/pillar/Column_HP.obj");
 }
 
 App1::~App1()
@@ -176,168 +182,111 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 	XMMATRIX world = renderer->getWorldMatrix();
 
 	//floor
+	renderTessellatedTerrain(mesh_floor.get(), world, view, proj, maps, textureMgr->getTexture(L"marble"), textureMgr->getTexture(L"noHeightMap"), renderDepth);
+
+	//terrain
 	world = XMMatrixTranslation(0.f, -20.f, 0.f);
-	mesh_terrain->sendData(renderer->getDeviceContext());
+	renderTessellatedTerrain(mesh_terrain.get(), world, view, proj, maps, textureMgr->getTexture(L"grass"), textureMgr->getTexture(L"heightMap"), renderDepth);
+
+	//Bench
+	world = XMMatrixScaling(0.0675f, 0.0675f, 0.0675f);
+	world = XMMatrixMultiply(world, XMMatrixTranslation(17.5f, -19.125f, 13.f));
+	renderTessellatedModel(model_bench.get(), world, view, proj, XMFLOAT3(0.0675f, 0.0675f, 0.0675f), maps, textureMgr->getTexture(L"model_bench_diffuse"),
+		NULL, NULL, renderDepth);
+
+	//Lamp
+	world = XMMatrixScaling(0.1f, 0.1f, 0.1f);
+	world = XMMatrixMultiply(world, XMMatrixTranslation(10.f, 0.f, 13.f));
+	renderTessellatedModel(model_lamp.get(), world, view, proj, XMFLOAT3(0.1f, 0.1f, 0.1f), maps, textureMgr->getTexture(L"model_lamp_diffuse"),
+		NULL, NULL, renderDepth);
+
+	//Mei Display
+	world = XMMatrixRotationAxis(XMVectorSet(0.f, 1.f, 0.f, 1.f), AI_DEG_TO_RAD(0.f));
+	world = XMMatrixMultiply(world, XMMatrixScaling(4.f, 4.f, 4.f));
+	world = XMMatrixMultiply(world, XMMatrixTranslation(10.f, 0.f, 0.f));
+	renderTessellatedModel(model_pillar.get(), world, view, proj, XMFLOAT3(4.f, 4.f, 4.f), maps, textureMgr->getTexture(L"model_mei_pillar"),
+		NULL, NULL, renderDepth);
+	world = XMMatrixRotationAxis(XMVectorSet(0.f, 1.f, 0.f, 1.f), AI_DEG_TO_RAD(95.f));
+	world = XMMatrixMultiply(world, XMMatrixScaling(0.075f, 0.075f, 0.075f));
+	world = XMMatrixMultiply(world, XMMatrixTranslation(11.125f, 5.25f, 0.f));
+	renderTessellatedModel(model_mei.get(), world, view, proj, XMFLOAT3(0.075f, 0.075f, 0.075f), maps, textureMgr->getTexture(L"model_mei_diffuse"),
+		NULL, NULL, renderDepth);
+
+	//Rock Display
+	world = XMMatrixRotationAxis(XMVectorSet(0.f, 1.f, 0.f, 1.f), AI_DEG_TO_RAD(0.f));
+	world = XMMatrixMultiply(world, XMMatrixScaling(4.f, 4.f, 4.f));
+	world = XMMatrixMultiply(world, XMMatrixTranslation(0.f, 0.f, 10.f));
+	renderTessellatedModel(model_pillar.get(), world, view, proj, XMFLOAT3(4.f, 4.f, 4.f), maps, textureMgr->getTexture(L"model_mei_pillar"),
+		NULL, NULL, renderDepth);
+	world = XMMatrixRotationAxis(XMVectorSet(0.f, 0.f, 1.f, 1.f), AI_DEG_TO_RAD(90.f));
+	world = XMMatrixMultiply(world, XMMatrixScaling(0.075f, 0.075f, 0.075f));
+	world = XMMatrixMultiply(world, XMMatrixTranslation(0.f, 6.25f, 10.25f));
+	renderTessellatedModel(model_rock.get(), world, view, proj, XMFLOAT3(0.075f, 0.075f, 0.075f), maps, textureMgr->getTexture(L"model_rock_diffuse"),
+		textureMgr->getTexture(L"model_rock_normal"), textureMgr->getTexture(L"model_rock_height"), renderDepth);
+
+	//Totoro Display
+	world = XMMatrixRotationAxis(XMVectorSet(0.f, 1.f, 0.f, 1.f), AI_DEG_TO_RAD(0.f));
+	world = XMMatrixMultiply(world, XMMatrixScaling(4.f, 4.f, 4.f));
+	world = XMMatrixMultiply(world, XMMatrixTranslation(-10.f, 0.f, 0.f));
+	renderTessellatedModel(model_pillar.get(), world, view, proj, XMFLOAT3(4.f, 4.f, 4.f), maps, textureMgr->getTexture(L"model_mei_pillar"),
+		NULL, NULL, renderDepth);
+	world = XMMatrixRotationAxis(XMVectorSet(0.f, 1.f, 0.f, 1.f), AI_DEG_TO_RAD(-90.f));
+	world = XMMatrixMultiply(world, XMMatrixScaling(4.f, 4.f, 4.f));
+	world = XMMatrixMultiply(world, XMMatrixTranslation(-10.f, 5.25f, 0.f));
+	renderTessellatedModel(model_totoro.get(), world, view, proj, XMFLOAT3(4.f, 4.f, 4.f), maps, textureMgr->getTexture(L"model_totoro_diffuse"),
+		NULL, NULL, renderDepth);
+}
+
+void App1::renderTessellatedModel(AModel* model, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& proj, const XMFLOAT3& scale,
+	std::unique_ptr<ShadowMap>* maps, ID3D11ShaderResourceView* texture_diffuse, ID3D11ShaderResourceView* texture_normal,
+	ID3D11ShaderResourceView* texture_height, bool renderDepth)
+{
+	model->sendData(renderer->getDeviceContext(), D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
+	if (renderDepth)
+	{
+		depth_tess_model_shader->setShaderParameters(
+			renderer->getDeviceContext(), world, view, proj,
+			NULL, gui_min_max_LOD, gui_min_max_distance, gui_model_tessellation_factors, gui_model_height_amplitude, camera
+		);
+		depth_tess_model_shader->render(renderer->getDeviceContext(), model->getIndexCount());
+	}
+	else
+	{
+		model_tess_shader->setShaderParameters(
+			renderer->getDeviceContext(), world, view, proj,
+			texture_diffuse, texture_height, texture_normal,
+			gui_min_max_LOD, gui_min_max_distance, gui_model_tessellation_factors, gui_model_height_amplitude, maps, light.data(), camera, gui_render_normals
+		);
+		model_tess_shader->render(renderer->getDeviceContext(), model->getIndexCount());
+		if (gui_render_normals)
+		{
+			debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj, scale);
+			debug_normals_shader->render(renderer->getDeviceContext(), model->getIndexCount());
+		}
+	}
+}
+
+void App1::renderTessellatedTerrain(TerrainMesh* terrain, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& proj,
+	std::unique_ptr<ShadowMap>* maps, ID3D11ShaderResourceView* texture_diffuse, ID3D11ShaderResourceView* heightmap, bool renderDepth)
+{
+	terrain->sendData(renderer->getDeviceContext());
 	if (renderDepth)
 	{
 		depth_tess_terrain_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
-			textureMgr->getTexture(L"heightMap"), gui_min_max_LOD, gui_min_max_distance, gui_terrain_height_amplitude, camera);
-		depth_tess_terrain_shader->render(renderer->getDeviceContext(), mesh_terrain->getIndexCount());
+			heightmap, gui_min_max_LOD, gui_min_max_distance, gui_terrain_height_amplitude, camera);
+		depth_tess_terrain_shader->render(renderer->getDeviceContext(), terrain->getIndexCount());
 	}
 	else
 	{
 		terrain_tess_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
-			textureMgr->getTexture(L"grass"), textureMgr->getTexture(L"heightMap"), gui_min_max_LOD, gui_min_max_distance, gui_terrain_texture_sacale,
+			texture_diffuse, heightmap, gui_min_max_LOD, gui_min_max_distance, gui_terrain_texture_sacale,
 			gui_terrain_height_amplitude, maps, light.data(), camera, gui_render_normals);
-		terrain_tess_shader->render(renderer->getDeviceContext(), mesh_terrain->getIndexCount());
+		terrain_tess_shader->render(renderer->getDeviceContext(), terrain->getIndexCount());
 
 		/*grass_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
 			textureMgr->getTexture(L"heightMap"), gui_min_max_LOD, gui_min_max_distance, gui_terrain_height_amplitude, camera);
 		grass_shader->render(renderer->getDeviceContext(), mesh_terrain->getIndexCount());*/
 	}
-
-	//Rocks
-	world = XMMatrixRotationAxis(XMVectorSet(1.f, 0.f, 0.f, 1.f), AI_DEG_TO_RAD(90.f));
-	world = XMMatrixMultiply(world, XMMatrixRotationAxis(XMVectorSet(0.f, 1.f, 0.f, 1.f), AI_DEG_TO_RAD(90.f)));
-	world = XMMatrixMultiply(world, XMMatrixScaling(0.5f, 0.25f, 0.5f));
-	world = XMMatrixMultiply(world, XMMatrixTranslation(2.f, -20.f, -6.f));
-	model_rock->sendData(renderer->getDeviceContext(), D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
-	//model_rock->sendData(renderer->getDeviceContext());
-	if (renderDepth)
-	{
-		depth_tess_model_shader->setShaderParameters(
-			renderer->getDeviceContext(), world, view, proj,
-			textureMgr->getTexture(L"model_rock_height"), gui_min_max_LOD, gui_min_max_distance, gui_model_height_amplitude, camera
-		);
-		depth_tess_model_shader->render(renderer->getDeviceContext(), model_rock->getIndexCount());
-	}
-	else
-	{
-		model_tess_shader->setShaderParameters(
-			renderer->getDeviceContext(), world, view, proj,
-			textureMgr->getTexture(L"model_rock_diffuse"), textureMgr->getTexture(L"model_rock_height"), textureMgr->getTexture(L"model_rock_normal"),
-			gui_min_max_LOD, gui_min_max_distance, gui_model_height_amplitude, maps, light.data(), camera, gui_render_normals
-		);
-		model_tess_shader->render(renderer->getDeviceContext(), model_rock->getIndexCount());
-		/*if (gui_render_normals)
-		{
-			debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj, XMFLOAT3(0.5f, 0.25f, 0.5f));
-			debug_normals_shader->render(renderer->getDeviceContext(), model_rock->getIndexCount());
-		}*/
-	}
-	world = XMMatrixRotationAxis(XMVectorSet(0.f, 0.f, 1.f, 1.f), AI_DEG_TO_RAD(90.f));
-	world = XMMatrixMultiply(world, XMMatrixScaling(0.375f, 0.125f, 0.25f));
-	world = XMMatrixMultiply(world, XMMatrixTranslation(-12.f, -19.f, 12.f));
-	model_rock->sendData(renderer->getDeviceContext(), D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
-	if (renderDepth)
-	{
-		depth_tess_model_shader->setShaderParameters(
-			renderer->getDeviceContext(), world, view, proj,
-			textureMgr->getTexture(L"model_rock_height"), gui_min_max_LOD, gui_min_max_distance, gui_model_height_amplitude, camera
-		);
-		depth_tess_model_shader->render(renderer->getDeviceContext(), model_rock->getIndexCount());
-	}
-	else
-	{
-		model_tess_shader->setShaderParameters(
-			renderer->getDeviceContext(), world, view, proj,
-			textureMgr->getTexture(L"model_rock_diffuse"), textureMgr->getTexture(L"model_rock_height"), textureMgr->getTexture(L"model_rock_normal"),
-			gui_min_max_LOD, gui_min_max_distance, gui_model_height_amplitude, maps, light.data(), camera, gui_render_normals
-		);
-		model_tess_shader->render(renderer->getDeviceContext(), model_rock->getIndexCount());
-		/*if (gui_render_normals)
-		{
-			debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj, XMFLOAT3(0.375f, 0.125f, 0.25f));
-			debug_normals_shader->render(renderer->getDeviceContext(), model_rock->getIndexCount());
-		}*/
-	}
-
-	//Bench
-	world = XMMatrixScaling(0.0675f, 0.0675f, 0.0675f);
-	world = XMMatrixMultiply(world, XMMatrixTranslation(17.5f, -19.125f, 13.f));
-	model_bench->sendData(renderer->getDeviceContext());
-	if (renderDepth)
-	{
-		depth_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
-		depth_shader->render(renderer->getDeviceContext(), model_bench->getIndexCount());
-	}
-	else
-	{
-		light_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
-			textureMgr->getTexture(L"model_bench_diffuse"), maps, light.data(), camera);
-		light_shader->render(renderer->getDeviceContext(), model_bench->getIndexCount());
-		if (gui_render_normals)
-		{
-			debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj, XMFLOAT3(0.0675f, 0.0675f, 0.0675f));
-			debug_normals_shader->render(renderer->getDeviceContext(), model_bench->getIndexCount());
-		}
-	}
-
-	//Lamp
-	world = XMMatrixScaling(0.1f, 0.1f, 0.1f);
-	world = XMMatrixMultiply(world, XMMatrixTranslation(10.f, 0.f, 13.f));
-	model_lamp->sendData(renderer->getDeviceContext());
-	if (renderDepth)
-	{
-		depth_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
-		depth_shader->render(renderer->getDeviceContext(), model_lamp->getIndexCount());
-	}
-	else
-	{
-		//renderer->setAlphaBlending(true);
-		light_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
-			textureMgr->getTexture(L"model_lamp_diffuse"), maps, light.data(), camera);
-		light_shader->render(renderer->getDeviceContext(), model_lamp->getIndexCount());
-		//renderer->setAlphaBlending(false);
-		if (gui_render_normals)
-		{
-			debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj, XMFLOAT3(0.1f, 0.1f, 0.1f));
-			debug_normals_shader->render(renderer->getDeviceContext(), model_lamp->getIndexCount());
-		}
-	}
-
-	////Mei
-	//world = XMMatrixRotationAxis(XMVectorSet(0.f, 1.f, 0.f, 1.f), AI_DEG_TO_RAD(95.f));
-	//world = XMMatrixMultiply(world, XMMatrixScaling(0.075f, 0.075f, 0.075f));
-	//world = XMMatrixMultiply(world, XMMatrixTranslation(20.f, -20.f, 7.5f));
-	//model_mei->sendData(renderer->getDeviceContext());
-	//if (renderDepth)
-	//{
-	//	depth_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
-	//	depth_shader->render(renderer->getDeviceContext(), model_mei->getIndexCount());
-	//}
-	//else
-	//{
-	//	light_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
-	//		textureMgr->getTexture(L"model_mei_diffuse"), maps, light.data(), camera);
-	//	light_shader->render(renderer->getDeviceContext(), model_mei->getIndexCount());
-	//	if (gui_render_normals)
-	//	{
-	//		debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj, XMFLOAT3(0.075f, 0.075f, 0.075f));
-	//		debug_normals_shader->render(renderer->getDeviceContext(), model_mei->getIndexCount());
-	//	}
-	//}
-
-	////Totoro
-	//world = XMMatrixScaling(12.f, 12.f, 12.f);
-	//world = XMMatrixMultiply(world, XMMatrixTranslation(0.f, -20.f, 13.f));
-	//model_totoro->sendData(renderer->getDeviceContext());
-	//if (renderDepth)
-	//{
-	//	depth_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj);
-	//	depth_shader->render(renderer->getDeviceContext(), model_totoro->getIndexCount());
-	//}
-	//else
-	//{
-	//	light_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
-	//		textureMgr->getTexture(L"model_totoro_diffuse"), maps, light.data(), camera);
-	//	light_shader->render(renderer->getDeviceContext(), model_totoro->getIndexCount());
-	//	if (gui_render_normals)
-	//	{
-	//		debug_normals_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj, XMFLOAT3(12.f, 12.f, 12.f));
-	//		debug_normals_shader->render(renderer->getDeviceContext(), model_totoro->getIndexCount());
-	//	}
-	//}
 }
 
 void App1::depthPass()
@@ -389,7 +338,7 @@ void App1::firstPass()
 {
 	// In the first pass, render the entire scene to a render target, so we can use it for the bloom post-processing effect
 	bloom_scene_render_target->setRenderTarget(renderer->getDeviceContext());
-	bloom_scene_render_target->clearRenderTarget(renderer->getDeviceContext(), 0.0f, 0.0f, .2f, 1.0f);
+	bloom_scene_render_target->clearRenderTarget(renderer->getDeviceContext(), 0.0f, 0.0f, 0.f, 1.0f);
 	camera->update();
 
 	// get the world, view, projection, and ortho matrices from the camera and Direct3D objects.
@@ -398,17 +347,20 @@ void App1::firstPass()
 	XMMATRIX projectionMatrix = renderer->getProjectionMatrix();
 
 	//Render the light debug sphere
-	mesh_light_debug_sphere->sendData(renderer->getDeviceContext());
-	for (int i = 0; i < N_LIGHTS; ++i)
+	if (gui_render_light_sphere)
 	{
-		//If light is off, dont draw sphere
-		if (!light[i]->getType()) continue;
+		mesh_light_debug_sphere->sendData(renderer->getDeviceContext());
+		for (int i = 0; i < N_LIGHTS; ++i)
+		{
+			//If light is off, dont draw sphere
+			if (!light[i]->getType()) continue;
 
-		XMFLOAT3 light_pos = light[i]->getPosition();
-		worldMatrix = XMMatrixScaling(.5f, .5f, .5f);
-		worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(light_pos.x, light_pos.y, light_pos.z));
-		light_debug_shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, light[i].get());
-		light_debug_shader->render(renderer->getDeviceContext(), mesh_light_debug_sphere->getIndexCount());
+			XMFLOAT3 light_pos = light[i]->getPosition();
+			worldMatrix = XMMatrixScaling(.5f, .5f, .5f);
+			worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(light_pos.x, light_pos.y, light_pos.z));
+			light_debug_shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, light[i].get());
+			light_debug_shader->render(renderer->getDeviceContext(), mesh_light_debug_sphere->getIndexCount());
+		}
 	}
 
 	// Render other objects used in multiple passes
@@ -420,36 +372,36 @@ void App1::firstPass()
 
 void App1::bloomPass()
 {
-	////Get the pixels that are above the treshhold value
-	//bloom_threshold_compute->setShaderParameters(renderer->getDeviceContext(), bloom_scene_render_target->getShaderResourceView(), gui_bloom_threshold);
-	//bloom_threshold_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 16.f), ceil((float)sHeight / 16.f), 1);
-	//bloom_threshold_compute->unbind(renderer->getDeviceContext());
+	//Get the pixels that are above the treshhold value
+	bloom_threshold_compute->setShaderParameters(renderer->getDeviceContext(), bloom_scene_render_target->getShaderResourceView(), gui_bloom_threshold);
+	bloom_threshold_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 16.f), ceil((float)sHeight / 16.f), 1);
+	bloom_threshold_compute->unbind(renderer->getDeviceContext());
 
-	//ID3D11ShaderResourceView* buffer_to_blur = bloom_threshold_compute->getShaderResourceView();
-	//for (int i = 0; i < gui_bloom_blur_iterations; ++i)
-	//{
-	//	// horiontal pass on bloom target
-	//	horizontal_blur_compute->setShaderParameters(renderer->getDeviceContext(), buffer_to_blur);
-	//	horizontal_blur_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 256.f), sHeight, 1);
-	//	//ceil((float)sWidth / 256.f) why? Because in the compute shader file, N = 256 threads will be created for each thread group.
-	//	//Therefore the width is divided to make sure each thread will have some work to do
-	//	horizontal_blur_compute->unbind(renderer->getDeviceContext());
+	ID3D11ShaderResourceView* buffer_to_blur = bloom_threshold_compute->getShaderResourceView();
+	for (int i = 0; i < gui_bloom_blur_iterations; ++i)
+	{
+		// horiontal pass on bloom target
+		horizontal_blur_compute->setShaderParameters(renderer->getDeviceContext(), buffer_to_blur);
+		horizontal_blur_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 256.f), sHeight, 1);
+		//ceil((float)sWidth / 256.f) why? Because in the compute shader file, N = 256 threads will be created for each thread group.
+		//Therefore the width is divided to make sure each thread will have some work to do
+		horizontal_blur_compute->unbind(renderer->getDeviceContext());
 
-	//	// Vertical blur using the horizontal blur result
-	//	vertical_blur_compute->setShaderParameters(renderer->getDeviceContext(), horizontal_blur_compute->getShaderResourceView());
-	//	vertical_blur_compute->compute(renderer->getDeviceContext(), sWidth, ceil((float)sHeight / 256.f), 1);
-	//	vertical_blur_compute->unbind(renderer->getDeviceContext());
+		// Vertical blur using the horizontal blur result
+		vertical_blur_compute->setShaderParameters(renderer->getDeviceContext(), horizontal_blur_compute->getShaderResourceView());
+		vertical_blur_compute->compute(renderer->getDeviceContext(), sWidth, ceil((float)sHeight / 256.f), 1);
+		vertical_blur_compute->unbind(renderer->getDeviceContext());
 
-	//	buffer_to_blur = vertical_blur_compute->getShaderResourceView();
-	//}
+		buffer_to_blur = vertical_blur_compute->getShaderResourceView();
+	}
 
-	//bloom_combine_compute->setShaderParameters(renderer->getDeviceContext(), bloom_scene_render_target->getShaderResourceView(), buffer_to_blur);
-	//bloom_combine_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 16.f), ceil((float)sHeight / 16.f), 1);
-	//bloom_combine_compute->unbind(renderer->getDeviceContext());
+	bloom_combine_compute->setShaderParameters(renderer->getDeviceContext(), bloom_scene_render_target->getShaderResourceView(), buffer_to_blur);
+	bloom_combine_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 16.f), ceil((float)sHeight / 16.f), 1);
+	bloom_combine_compute->unbind(renderer->getDeviceContext());
 
-	bloom_compute->setShaderParameters(renderer->getDeviceContext(), bloom_scene_render_target->getShaderResourceView(), gui_bloom_threshold, gui_bloom_blur_iterations);
+	/*bloom_compute->setShaderParameters(renderer->getDeviceContext(), bloom_scene_render_target->getShaderResourceView(), gui_bloom_threshold, gui_bloom_blur_iterations);
 	bloom_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 16.f), ceil((float)sHeight / 16.f), 1);
-	bloom_compute->unbind(renderer->getDeviceContext());
+	bloom_compute->unbind(renderer->getDeviceContext());*/
 
 	// Reset the render target back to the original back buffer and not the render to texture anymore.
 	renderer->setBackBufferRenderTarget();
@@ -471,7 +423,7 @@ void App1::finalPass()
 	//Render the main scene after post processing
 	renderer->setZBuffer(false);
 	orthomesh_display->sendData(renderer->getDeviceContext());
-	texture_shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, bloom_compute->getShaderResourceView());
+	texture_shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, bloom_combine_compute->getShaderResourceView());
 	texture_shader->render(renderer->getDeviceContext(), orthomesh_display->getIndexCount());
 	renderer->setZBuffer(true);
 
@@ -533,11 +485,13 @@ void App1::gui()
 
 	ImGui::Separator();
 	ImGui::Text("Model Mesh Settings:");
+	ImGui::SliderFloat("Tessellation Factor Inside", &gui_model_tessellation_factors.x, 1.f, 64.f);
+	ImGui::SliderFloat("Tessellation Factor Outside", &gui_model_tessellation_factors.y, 1.f, 64.f);
 	ImGui::SliderFloat("Tessellation Height Amplitude", &gui_model_height_amplitude, 0.f, 20.f);
 
 	ImGui::Separator();
 	ImGui::Text("Bloom Settings:");
-	ImGui::SliderFloat("Threshold", &gui_bloom_threshold, 0.f, 1.f);
+	ImGui::DragFloat("Threshold", &gui_bloom_threshold, 0.001f, 0.f, 10.f);
 	ImGui::SliderInt("Blur Passes", &gui_bloom_blur_iterations, 1, 20);
 
 	ImGui::Separator();
@@ -546,6 +500,7 @@ void App1::gui()
 	if (open_light_editor % 2)
 	{
 		ImGui::Begin("Light Editor", (bool*)&open_light_editor);
+		ImGui::Checkbox("Render Debug Spheres", &gui_render_light_sphere);
 
 		for (int i = 0; i < N_LIGHTS; ++i)
 		{
