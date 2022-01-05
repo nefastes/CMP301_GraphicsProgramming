@@ -3,8 +3,8 @@
 #include "App1.h"
 
 App1::App1() : gui_shadow_map_display_index(0), gui_min_max_LOD(1.f, 15.f), gui_min_max_distance(50.f, 75.f),
-gui_render_normals(false), gui_terrain_texture_sacale(XMFLOAT2(20.f, 20.f)), gui_terrain_height_amplitude(2.875f),
-gui_model_height_amplitude(0.f), gui_bloom_threshold(0.7f), gui_bloom_blur_iterations(1), gui_render_light_sphere(true),
+gui_render_normals(false), gui_terrain_texture_sacale(XMFLOAT2(20.f, 20.f)), gui_terrain_height_amplitude(15.f),
+gui_model_height_amplitude(0.f), gui_bloom_threshold(1.5f), gui_bloom_blur_iterations(10), gui_render_light_sphere(true),
 gui_model_tessellation_factors(XMFLOAT2(1.f, 1.f))
 {
 	for (int i = 0; i < N_LIGHTS; ++i)
@@ -36,10 +36,10 @@ gui_model_tessellation_factors(XMFLOAT2(1.f, 1.f))
 
 	//Light 2 curstom setup
 	gui_light_type[1] = 2;
-	gui_light_position[1] = XMFLOAT3(10.f, -5.f, 13.f);
+	gui_light_position[1] = XMFLOAT3(0.f, 15.f, 0.f);
 	gui_light_frustum[1] = XMFLOAT2(5.f, 100.f);
 	gui_light_diffuse_colour[1] = XMFLOAT4(1.f, .835f, .377f, 1.f);
-	gui_light_attenuation_factors[1] = XMFLOAT3(.0f, .1f, .0f);
+	gui_light_attenuation_factors[1] = XMFLOAT3(.5f, .25f, .00125f);
 }
 
 void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeight, Input *in, bool VSYNC, bool FULL_SCREEN)
@@ -48,8 +48,8 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	BaseApplication::init(hinstance, hwnd, screenWidth, screenHeight, in, VSYNC, FULL_SCREEN);
 
 	//// Load textures
-	textureMgr->loadTexture(L"heightMap", L"res/heightmap7.dds");	//11, 16 are nice
-	textureMgr->loadTexture(L"noHeightMap", L"res/heightmap0.jpg");	//11, 16 are nice
+	textureMgr->loadTexture(L"heightMap", L"res/heightmap3.dds");
+	textureMgr->loadTexture(L"noHeightMap", L"res/heightmap0.jpg");
 	textureMgr->loadTexture(L"brick", L"res/brick1.dds");
 	textureMgr->loadTexture(L"wood", L"res/wood.png");
 	textureMgr->loadTexture(L"grass", L"res/grass_2.jpg");
@@ -184,19 +184,25 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 	//floor
 	renderTessellatedTerrain(mesh_floor.get(), world, view, proj, maps, textureMgr->getTexture(L"marble"), textureMgr->getTexture(L"noHeightMap"), renderDepth);
 
-	//terrain
-	world = XMMatrixTranslation(0.f, -20.f, 0.f);
+	//Terrain Display
+	world = XMMatrixRotationAxis(XMVectorSet(0.f, 1.f, 0.f, 1.f), AI_DEG_TO_RAD(0.f));
+	world = XMMatrixMultiply(world, XMMatrixScaling(16.f, 2.f, 16.f));
+	world = XMMatrixMultiply(world, XMMatrixTranslation(0.f, 0.f, -15.f));
+	renderTessellatedModel(model_pillar.get(), world, view, proj, XMFLOAT3(4.f, 4.f, 4.f), maps, textureMgr->getTexture(L"model_mei_pillar"),
+		NULL, NULL, renderDepth);
+	world = XMMatrixScaling(.125f, .125f, .125f);
+	world = XMMatrixMultiply(world, XMMatrixTranslation(0.f, 2.75f, -15.f));
 	renderTessellatedTerrain(mesh_terrain.get(), world, view, proj, maps, textureMgr->getTexture(L"grass"), textureMgr->getTexture(L"heightMap"), renderDepth);
 
 	//Bench
 	world = XMMatrixScaling(0.0675f, 0.0675f, 0.0675f);
-	world = XMMatrixMultiply(world, XMMatrixTranslation(17.5f, -19.125f, 13.f));
+	world = XMMatrixMultiply(world, XMMatrixTranslation(17.5f, 1.f, 13.f));
 	renderTessellatedModel(model_bench.get(), world, view, proj, XMFLOAT3(0.0675f, 0.0675f, 0.0675f), maps, textureMgr->getTexture(L"model_bench_diffuse"),
 		NULL, NULL, renderDepth);
 
 	//Lamp
 	world = XMMatrixScaling(0.1f, 0.1f, 0.1f);
-	world = XMMatrixMultiply(world, XMMatrixTranslation(10.f, 0.f, 13.f));
+	world = XMMatrixMultiply(world, XMMatrixTranslation(0.f, 20.f, 0.f));
 	renderTessellatedModel(model_lamp.get(), world, view, proj, XMFLOAT3(0.1f, 0.1f, 0.1f), maps, textureMgr->getTexture(L"model_lamp_diffuse"),
 		NULL, NULL, renderDepth);
 
@@ -399,6 +405,8 @@ void App1::bloomPass()
 	bloom_combine_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 16.f), ceil((float)sHeight / 16.f), 1);
 	bloom_combine_compute->unbind(renderer->getDeviceContext());
 
+	//The below compute shader was a bad attempt at combining all the above compute shaders into a single one
+	//Had artefacts, performed worse -> discarded
 	/*bloom_compute->setShaderParameters(renderer->getDeviceContext(), bloom_scene_render_target->getShaderResourceView(), gui_bloom_threshold, gui_bloom_blur_iterations);
 	bloom_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 16.f), ceil((float)sHeight / 16.f), 1);
 	bloom_compute->unbind(renderer->getDeviceContext());*/
@@ -439,8 +447,6 @@ void App1::finalPass()
 	gui();
 	renderer->endScene();
 }
-
-
 
 void App1::gui()
 {
