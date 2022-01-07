@@ -128,7 +128,8 @@ void DepthTerrainTessShader::setShaderParameters(ID3D11DeviceContext* deviceCont
 	result = deviceContext->Map(DsSettingsBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	DsSettingsBufferType* DsSettingsPtr = (DsSettingsBufferType*)mappedResource.pData;
 	DsSettingsPtr->height_amplitude = *terrain->getPtrHeightAmplitude();
-	DsSettingsPtr->padding = XMFLOAT3(0.f, 0.f, 0.f);
+	DsSettingsPtr->texture_scale = *terrain->getPtrNormalMap() ? *terrain->getPtrTextureScale() : XMFLOAT2(1.f, 1.f); //Only apply the texture scale to the heightmap if the given texture came with the heightmap and normal map
+	DsSettingsPtr->padding = 0.f;
 	deviceContext->Unmap(DsSettingsBuffer, 0);
 	deviceContext->DSSetConstantBuffers(1, 1, &DsSettingsBuffer);
 }

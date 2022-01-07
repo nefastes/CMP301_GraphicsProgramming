@@ -1,5 +1,4 @@
 #define N_LIGHTS 4
-#define TERRAIN_SCALE 100.f
 #define HEIGHTMAP_SUB_SAMPLE 1.f
 
 Texture2D shaderTexture : register(t0);
@@ -27,6 +26,8 @@ cbuffer SettingsBuffer : register(b1)
     float2 texture_scale;
     float height_amplitude;
     float use_normal_map;
+	float terrain_scale;
+	float3 padding;
 };
 
 struct InputType
@@ -55,7 +56,7 @@ float3 calculateHeightMapNormal(float3 input_position, float2 uv)
     float v_step = HEIGHTMAP_SUB_SAMPLE / (float) texture_height;
 
 	//Transform per pixel step to world step
-    float worldStep = 1.f * u_step / (1.f / TERRAIN_SCALE); //regle de trois
+	float worldStep = 1.f * u_step / (1.f / terrain_scale); //regle de trois
 	
 	//From Erin's explanation
     //Start by calculating the heights for all surrounding neighbours vertices

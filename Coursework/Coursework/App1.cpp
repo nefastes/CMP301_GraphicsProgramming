@@ -120,18 +120,18 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	bloom_scene_render_target = std::make_unique<RenderTexture>(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
 
 	//Init terrains
-	mesh_terrain = std::make_unique<TerrainMesh>(renderer->getDevice(), renderer->getDeviceContext());
-	*mesh_terrain->getPtrHeightAmplitude() = 15.f;
-	*mesh_terrain->getPtrMinMaxDistance() = XMFLOAT2(50.f, 75.f);
+	mesh_terrain = std::make_unique<TerrainMesh>(renderer->getDevice(), renderer->getDeviceContext(), 10.f, XMFLOAT3(0.f, 2.75f, -15.f));
+	*mesh_terrain->getPtrHeightAmplitude() = 1.5f;
+	*mesh_terrain->getPtrMinMaxDistance() = XMFLOAT2(5.f, 15.f);
 	*mesh_terrain->getPtrMinMaxLOD() = XMFLOAT2(1.f, 15.f);
-	*mesh_terrain->getPtrTextureScale() = XMFLOAT2(20.f, 20.f);
+	*mesh_terrain->getPtrTextureScale() = XMFLOAT2(10.f, 10.f);
 	mesh_terrain->setTextureDiffuse(textureMgr->getTexture(L"grass"));
 	mesh_terrain->setTextureHeightMap(textureMgr->getTexture(L"heightMap"));
-	mesh_floor = std::make_unique<TerrainMesh>(renderer->getDevice(), renderer->getDeviceContext());
-	*mesh_floor->getPtrHeightAmplitude() = 1.f;
+	mesh_floor = std::make_unique<TerrainMesh>(renderer->getDevice(), renderer->getDeviceContext(), 75.f);
+	*mesh_floor->getPtrHeightAmplitude() = .45f;
 	*mesh_floor->getPtrMinMaxDistance() = XMFLOAT2(50.f, 75.f);
 	*mesh_floor->getPtrMinMaxLOD() = XMFLOAT2(1.f, 15.f);
-	*mesh_floor->getPtrTextureScale() = XMFLOAT2(20.f, 20.f);
+	*mesh_floor->getPtrTextureScale() = XMFLOAT2(10.f, 10.f);
 	mesh_floor->setTextureDiffuse(textureMgr->getTexture(L"marble_diffuse"));
 	mesh_floor->setTextureNormalMap(textureMgr->getTexture(L"marble_normal"));
 	mesh_floor->setTextureHeightMap(textureMgr->getTexture(L"marble_height"));
@@ -220,8 +220,9 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 	world = XMMatrixMultiply(world, XMMatrixTranslation(0.f, 0.f, -15.f));
 	renderTessellatedModel(model_pillar.get(), world, view, proj, XMFLOAT3(4.f, 4.f, 4.f), maps, textureMgr->getTexture(L"model_mei_pillar"),
 		NULL, NULL, renderDepth);
-	world = XMMatrixScaling(.125f, .125f, .125f);
-	world = XMMatrixMultiply(world, XMMatrixTranslation(0.f, 2.75f, -15.f));
+	//world = XMMatrixScaling(.125f, .125f, .125f);
+	//world = XMMatrixMultiply(world, XMMatrixTranslation(0.f, 2.75f, -15.f));
+	world = renderer->getWorldMatrix();
 	renderTessellatedTerrain(mesh_terrain.get(), world, view, proj, maps, textureMgr->getTexture(L"grass"), textureMgr->getTexture(L"heightMap"), NULL, renderDepth);
 
 	//Bench
@@ -296,7 +297,7 @@ void App1::renderTessellatedTerrain(TerrainMesh* terrain, const XMMATRIX& world,
 	}
 	else
 	{
-		terrain_tess_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj, terrain, maps, light.data(), camera, gui_render_normals, *terrain->getPtrNormalMap());
+		terrain_tess_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj, terrain, maps, light.data(), camera, gui_render_normals);
 		terrain_tess_shader->render(renderer->getDeviceContext(), terrain->getIndexCount());
 
 		/*grass_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,

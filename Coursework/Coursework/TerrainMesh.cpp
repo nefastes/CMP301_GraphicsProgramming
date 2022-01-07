@@ -1,11 +1,11 @@
 #include "TerrainMesh.h"
+//Define the number of vertices that will be created on each axis
 #define TERRAIN_X_LEN 32
 #define TERRAIN_Z_LEN 32
-#define TERRAIN_SCALE 100.f	//Careful! Modifying this value needs adjustments on the Pixel Shader for the normal estimation
 
-TerrainMesh::TerrainMesh(ID3D11Device* device, ID3D11DeviceContext* deviceContext) : min_max_distance_(XMFLOAT2(0.f, 0.f)), min_max_LOD_(XMFLOAT2(0.f, 0.f)),
-terrain_texture_scale_(XMFLOAT2(0.f, 0.f)), terrain_height_amplitude_(0.f), use_normal_map_(false), texture_diffuse_(nullptr), texture_normalMap_(nullptr),
-texture_heightMap_(nullptr)
+TerrainMesh::TerrainMesh(ID3D11Device* device, ID3D11DeviceContext* deviceContext, float scale, XMFLOAT3 origin) : scale_(scale), origin_(origin),
+min_max_distance_(XMFLOAT2(0.f, 0.f)), min_max_LOD_(XMFLOAT2(0.f, 0.f)), terrain_texture_scale_(XMFLOAT2(0.f, 0.f)), terrain_height_amplitude_(0.f),
+use_normal_map_(false), texture_diffuse_(nullptr), texture_normalMap_(nullptr), texture_heightMap_(nullptr)
 {
 	initBuffers(device);
 }
@@ -30,7 +30,6 @@ void TerrainMesh::sendData(ID3D11DeviceContext* deviceContext, D3D_PRIMITIVE_TOP
 	deviceContext->IASetPrimitiveTopology(top);
 }
 
-#define book_clamp(value, minimum, maximum) (max( min( (value), (maximum) ), (minimum) ))
 void TerrainMesh::initBuffers(ID3D11Device* device)
 {
 	VertexType* vertices;
@@ -53,7 +52,7 @@ void TerrainMesh::initBuffers(ID3D11Device* device)
 		{
 			float fX = static_cast<float>(x) / fWidht - .5f;
 			float fZ = static_cast<float>(z) / fHeight - .5f;
-			vertices[x + z * (TERRAIN_X_LEN + 1)].position = XMFLOAT3(fX * TERRAIN_SCALE, 0.f, fZ * TERRAIN_SCALE);
+			vertices[x + z * (TERRAIN_X_LEN + 1)].position = XMFLOAT3(origin_.x + fX * scale_, origin_.y + 0.f, origin_.z + fZ * scale_);
 			vertices[x + z * (TERRAIN_X_LEN + 1)].texture = XMFLOAT2(fX + .5f, fZ + .5f);
 			vertices[x + z * (TERRAIN_X_LEN + 1)].normal = XMFLOAT3(0.f, 1.f, 0.f);
 		}

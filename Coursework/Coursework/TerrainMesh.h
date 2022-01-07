@@ -4,10 +4,13 @@ using namespace DirectX;
 class TerrainMesh : public BaseMesh
 {
 public:
-	TerrainMesh(ID3D11Device* device, ID3D11DeviceContext* deviceContext);
+	TerrainMesh(ID3D11Device* device, ID3D11DeviceContext* deviceContext, float scale = 1.f, XMFLOAT3 origin = XMFLOAT3(0.f, 0.f, 0.f));
 	~TerrainMesh();
 
 	void sendData(ID3D11DeviceContext* deviceContext, D3D_PRIMITIVE_TOPOLOGY top = D3D11_PRIMITIVE_TOPOLOGY_12_CONTROL_POINT_PATCHLIST) override;
+
+	const XMFLOAT3& getOrigin() { return origin_; }
+	const float& getScale() { return scale_; }
 
 	XMFLOAT2* getPtrMinMaxLOD() { return &min_max_LOD_; }
 	XMFLOAT2* getPtrMinMaxDistance() { return &min_max_distance_; }
@@ -24,6 +27,9 @@ public:
 
 protected:
 	void initBuffers(ID3D11Device* device);
+	XMFLOAT3 origin_;
+	float scale_;
+
 	XMFLOAT2 min_max_LOD_;
 	XMFLOAT2 min_max_distance_;
 	XMFLOAT2 terrain_texture_scale_;

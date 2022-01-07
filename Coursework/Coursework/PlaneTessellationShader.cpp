@@ -48,7 +48,7 @@ PlaneTessellationShader::~PlaneTessellationShader()
 }
 
 void PlaneTessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix,
-	TerrainMesh* terrain, std::unique_ptr<ShadowMap>* maps, std::unique_ptr<Light>* light, Camera* camera, bool render_normals, bool use_normal_map)
+	TerrainMesh* terrain, std::unique_ptr<ShadowMap>* maps, std::unique_ptr<Light>* light, Camera* camera, bool render_normals)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -93,7 +93,8 @@ void PlaneTessellationShader::setShaderParameters(ID3D11DeviceContext* deviceCon
 	result = deviceContext->Map(DsSettingsBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	DsSettingsBufferType* DsSettingsPtr = (DsSettingsBufferType*)mappedResource.pData;
 	DsSettingsPtr->height_amplitude = *terrain->getPtrHeightAmplitude();
-	DsSettingsPtr->padding = XMFLOAT3(0.f, 0.f, 0.f);
+	DsSettingsPtr->texture_scale = *terrain->getPtrNormalMap() ? *terrain->getPtrTextureScale() : XMFLOAT2(1.f, 1.f); //Only apply the texture scale to the heightmap if the given texture came with the heightmap and normal map
+	DsSettingsPtr->padding = 0.f;
 	deviceContext->Unmap(DsSettingsBuffer, 0);
 	deviceContext->DSSetConstantBuffers(1, 1, &DsSettingsBuffer);
 
@@ -126,7 +127,9 @@ void PlaneTessellationShader::setShaderParameters(ID3D11DeviceContext* deviceCon
 	PsSettingsBufferType* PsSettingsPtr = (PsSettingsBufferType*)mappedResource.pData;
 	PsSettingsPtr->texture_scale = *terrain->getPtrTextureScale();
 	PsSettingsPtr->height_amplitude = *terrain->getPtrHeightAmplitude();
-	PsSettingsPtr->use_normal_map = static_cast<float>(use_normal_map);
+	PsSettingsPtr->use_normal_map = static_cast<float>(*terrain->getPtrNormalMap());
+	PsSettingsPtr->terrain_scale = terrain->getScale();
+	PsSettingsPtr->padding = XMFLOAT3(0.f, 0.f, 0.f);
 	deviceContext->Unmap(PsSettingsBuffer, 0);
 	deviceContext->PSSetConstantBuffers(1, 1, &PsSettingsBuffer);
 
@@ -227,9 +230,9 @@ void PlaneTessellationShader::initShader(const wchar_t* vsFilename, const wchar_
 	renderer->CreateSamplerState(&samplerDesc, &sampleStateShadow);
 	// Sampler for height map sampling.
 	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
 	samplerDesc.BorderColor[0] = 0;
 	samplerDesc.BorderColor[1] = 0;
 	samplerDesc.BorderColor[2] = 0;

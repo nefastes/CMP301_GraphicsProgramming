@@ -18,7 +18,8 @@ cbuffer MatrixBuffer : register(b0)
 cbuffer SettingsBuffer : register(b1)
 {
     float height_amplitude;
-    float3 padding;
+	float2 texture_scale;
+    float padding;
 };
 
 struct ConstantOutputType
@@ -58,11 +59,11 @@ OutputType main(ConstantOutputType input, float2 uv : SV_DomainLocation, const O
     OutputType output;
  
     // Determine the position of the new vertex.
-	vertexPosition.xz =
-        patch[0].position.xz * (1.f - uv.x) * (1.f - uv.y) +
-        patch[1].position.xz * uv.x * (1.f - uv.y) +
-        patch[2].position.xz * (1.f - uv.x) * uv.y +
-        patch[3].position.xz * uv.x * uv.y;
+	vertexPosition =
+        patch[0].position * (1.f - uv.x) * (1.f - uv.y) +
+        patch[1].position * uv.x * (1.f - uv.y) +
+        patch[2].position * (1.f - uv.x) * uv.y +
+        patch[3].position * uv.x * uv.y;
         
 	texCoord =
 		patch[0].tex * (1.f - uv.x) * (1.f - uv.y) +
@@ -71,7 +72,7 @@ OutputType main(ConstantOutputType input, float2 uv : SV_DomainLocation, const O
         patch[3].tex * uv.x * uv.y;
 	
 	//Get the height of the vertex from the heightmap
-    vertexPosition.y = getHeight(texCoord);
+	vertexPosition.y += getHeight(texCoord * texture_scale);
 		    
     // Calculate the position of the new vertex against the world, view, and projection matrices.
     output.position = mul(float4(vertexPosition, 1.0f), worldMatrix);

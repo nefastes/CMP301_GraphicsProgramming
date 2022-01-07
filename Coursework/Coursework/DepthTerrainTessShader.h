@@ -29,7 +29,8 @@ class DepthTerrainTessShader : public BaseShader
 	struct DsSettingsBufferType
 	{
 		float height_amplitude;
-		XMFLOAT3 padding;
+		XMFLOAT2 texture_scale;
+		float padding;
 	};
 
 public:

@@ -1,16 +1,11 @@
 New coursework plan:
 	V finish tessellated plane with heightmap (could optmise dynamically assign GPU memory (can send less useless empty marices))
-	- do a simple post processing bloom (gloom?) OR dynamic cube maps???
-	- grass instanced on the geometry shader (not manipulated)
-	- cascaded shadow maps
-	- enhanced bloom
-
-Bloom:
-	- have a treshold value (0.7)
-	- average the RGB components: if above the treshold write to render target, else write black
-	- blur the render target
-	- add the render target on top of the final render (do not saturate)
-	- more efficient bloom will use the idea of luminence (multiply rgba with some matrix to get luminence)
+	V do a simple post processing bloom (gloom?) OR dynamic cube maps???
+	X grass instanced on the geometry shader (not manipulated) -> Sadly didn't have time for it ):
+	- generate TerrainMesh with a translation and scale
+	- rewrite blur compute shader
+	- clean code
+	- soft shadows
 
 Links:
 https://github.com/walbourn/directx-sdk-samples

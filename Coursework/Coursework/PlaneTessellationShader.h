@@ -41,7 +41,8 @@ class PlaneTessellationShader : public BaseShader
 	struct DsSettingsBufferType
 	{
 		float height_amplitude;
-		XMFLOAT3 padding;
+		XMFLOAT2 texture_scale;
+		float padding;
 	};
 
 	struct PsSettingsBufferType
@@ -49,6 +50,8 @@ class PlaneTessellationShader : public BaseShader
 		XMFLOAT2 texture_scale;
 		float height_amplitude;
 		float use_normal_map;
+		float terrain_scale;
+		XMFLOAT3 padding;
 	};
 
 public:
@@ -57,7 +60,7 @@ public:
 	~PlaneTessellationShader();
 
 	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& projection, TerrainMesh* terrain,
-		std::unique_ptr<ShadowMap>* maps, std::unique_ptr<Light>* light, Camera* camera, bool render_normals, bool use_normal_map);
+		std::unique_ptr<ShadowMap>* maps, std::unique_ptr<Light>* light, Camera* camera, bool render_normals);
 
 private:
 	void initShader(const wchar_t* vsFilename, const wchar_t* psFilename);
