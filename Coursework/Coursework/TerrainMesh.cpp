@@ -3,7 +3,8 @@
 #define TERRAIN_Z_LEN 32
 #define TERRAIN_SCALE 100.f	//Careful! Modifying this value needs adjustments on the Pixel Shader for the normal estimation
 
-TerrainMesh::TerrainMesh(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
+TerrainMesh::TerrainMesh(ID3D11Device* device, ID3D11DeviceContext* deviceContext) : min_max_distance_(XMFLOAT2(0.f, 0.f)), min_max_LOD_(XMFLOAT2(0.f, 0.f)),
+terrain_texture_scale_(XMFLOAT2(0.f, 0.f)), terrain_height_amplitude_(0.f), use_normal_map_(false)
 {
 	initBuffers(device);
 }

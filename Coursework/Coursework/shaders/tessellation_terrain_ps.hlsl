@@ -4,7 +4,8 @@
 
 Texture2D shaderTexture : register(t0);
 Texture2D heightMap : register(t1);
-Texture2D depthMapTexture[N_LIGHTS * 6] : register(t2);
+Texture2D normalMap : register(t2);
+Texture2D depthMapTexture[N_LIGHTS * 6] : register(t3);
 
 SamplerState diffuseSampler : register(s0);
 SamplerState shadowSampler : register(s1);
@@ -25,14 +26,14 @@ cbuffer SettingsBuffer : register(b1)
 {
     float2 texture_scale;
     float height_amplitude;
-    float padding;
+    float use_normal_map;
 };
 
 struct InputType
 {
     float4 position : SV_POSITION;
-    float2 tex : TEXCOORD0;
-    float3 normal : NORMAL;
+	float2 tex : TEXCOORD0;
+	float3x3 TBN : NORMAL;
     float3 worldPosition : TEXCOORD1;
     float3 viewVector : TEXCOORD2;
     float4 lightViewPos[N_LIGHTS * 6] : TEXCOORD3;
@@ -78,6 +79,20 @@ float3 calculateHeightMapNormal(float3 input_position, float2 uv)
     //The normal is a simple cross product of both tangents
     float3 normal = cross(tangentX, tangentZ);
     return normal;
+}
+
+float3 sampleNormalMap(float2 uv, float3x3 TBN)
+{
+	float3 normal;
+
+    //First sample the colour
+	normal = normalMap.Sample(diffuseSampler, uv).rgb;
+    //The normal components are in range [0,1], but normals need to be in range [-1,1], so convert back
+	normal = normal * 2.f - 1.f;
+    //The normal map faces the Z direction, but the terrain is facing the Y direction, so fix that
+	normal = normalize(mul(TBN, normal));
+    //Return the new normal
+	return normalize(normal);
 }
 
 float4 calculateSpecular(float3 lightDirection, float3 normal, float3 viewVector, float4 specularColour, float specularPower)
@@ -132,7 +147,7 @@ float4 main(InputType input) : SV_TARGET
     int ambient_count = 0;
 
     //Calculate the new normal of the terrain per texel
-    float3 input_new_normal = calculateHeightMapNormal(input.position.xyz, input.tex);
+	float3 input_new_normal = (bool)use_normal_map * sampleNormalMap(input.tex * texture_scale, input.TBN) + !(bool)use_normal_map * calculateHeightMapNormal(input.position.xyz, input.tex);
     //If we render normals, output it as a colour
     if ((bool) falloff_spotAngle_renderNormals_padding[0].z) return float4(input_new_normal, 1.f);
 	

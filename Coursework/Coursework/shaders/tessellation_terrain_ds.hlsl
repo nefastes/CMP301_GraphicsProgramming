@@ -39,7 +39,7 @@ struct OutputType
 {
 	float4 position : SV_POSITION;
 	float2 tex : TEXCOORD0;
-	float3 normal : NORMAL;
+	float3x3 TBN : NORMAL;
 	float3 worldPosition : TEXCOORD1;
     float3 viewVector : TEXCOORD2;
     float4 lightViewPos[N_LIGHTS * 6] : TEXCOORD3;
@@ -85,9 +85,6 @@ OutputType main(ConstantOutputType input, float2 uv : SV_DomainLocation, const O
 		output.lightViewPos[i] = mul(float4(vertexPosition, 1.f), worldMatrix);
 		output.lightViewPos[i] = mul(output.lightViewPos[i], lightViewMatrix[i]);
 		output.lightViewPos[i] = mul(output.lightViewPos[i], lightProjectionMatrix[i / 6]);
-
-		// Store the position value in a second input value for depth value calculations.
-        //output.depthPosition[i] = output.lightViewPos[i];
     }
 
 	//Calculate the position of the vertex viewed by the camera
@@ -96,10 +93,15 @@ OutputType main(ConstantOutputType input, float2 uv : SV_DomainLocation, const O
 
     // Send the input tex into the pixel shader.
     output.tex = texCoord;
-    
-    // Send the input normal into the pixel shader.
-	output.normal = mul(patch[0].normal, (float3x3) worldMatrix);
-	output.normal = normalize(output.normal);
+	
+	//Calculate the tangent and bitangent of the normal
+	//The normal on the surface is (0, 1, 0), therefore define its tangent and bitangent and form the TBN matrix
+	//Note: this will only work on the terrain, cause the normal is UP(0, 1, 0). If the normal is varaible, will need more trickery.
+	float3 tangent = normalize(mul((float3x3) worldMatrix, float3(1.f, 0.f, 0.f)));
+	float3 bitangent = normalize(mul((float3x3) worldMatrix, float3(0.f, 0.f, 1.f)));
+	float3 normal = normalize(mul((float3x3) worldMatrix, float3(0.f, 1.f, 0.f)));
+	//Create the TBN matrix
+	output.TBN = float3x3(tangent, bitangent, normal);
 
     return output;
 }

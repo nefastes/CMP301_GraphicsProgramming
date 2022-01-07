@@ -51,7 +51,7 @@ private:
 		std::unique_ptr<ShadowMap>* maps, ID3D11ShaderResourceView* texture_diffuse, ID3D11ShaderResourceView* texture_normal,
 		ID3D11ShaderResourceView* texture_height, bool renderDepth);
 	void renderTessellatedTerrain(TerrainMesh* terrain, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& proj,
-		std::unique_ptr<ShadowMap>* maps, ID3D11ShaderResourceView* texture_diffuse, ID3D11ShaderResourceView* heightmap, bool renderDepth);
+		std::unique_ptr<ShadowMap>* maps, ID3D11ShaderResourceView* texture_diffuse, ID3D11ShaderResourceView* heightmap, ID3D11ShaderResourceView* normalmap, bool renderDepth);
 
 	//Shaders
 	std::unique_ptr<ShadowShader> light_shader;
@@ -116,10 +116,6 @@ private:
 	std::array<float, N_LIGHTS> gui_light_shadow_bias;
 
 	//Gui tessellation
-	XMFLOAT2 gui_min_max_LOD;
-	XMFLOAT2 gui_min_max_distance;
-	XMFLOAT2 gui_terrain_texture_sacale;
-	float gui_terrain_height_amplitude;
 	XMFLOAT2 gui_model_tessellation_factors;
 	float gui_model_height_amplitude;
 

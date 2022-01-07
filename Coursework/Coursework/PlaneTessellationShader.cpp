@@ -48,8 +48,8 @@ PlaneTessellationShader::~PlaneTessellationShader()
 }
 
 void PlaneTessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix,
-	ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* heightMap, XMFLOAT2& minMaxLOD, XMFLOAT2& minMaxDistance, XMFLOAT2& tex_scale,
-	float height_amplitude, std::unique_ptr<ShadowMap>* maps, std::unique_ptr<Light>* light, Camera* camera, bool render_normals)
+	ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* heightMap, ID3D11ShaderResourceView* normalMap, XMFLOAT2& minMaxLOD, XMFLOAT2& minMaxDistance, XMFLOAT2& tex_scale,
+	float height_amplitude, std::unique_ptr<ShadowMap>* maps, std::unique_ptr<Light>* light, Camera* camera, bool render_normals, bool use_normal_map)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -127,17 +127,18 @@ void PlaneTessellationShader::setShaderParameters(ID3D11DeviceContext* deviceCon
 	PsSettingsBufferType* PsSettingsPtr = (PsSettingsBufferType*)mappedResource.pData;
 	PsSettingsPtr->texture_scale = tex_scale;
 	PsSettingsPtr->height_amplitude = height_amplitude;
-	PsSettingsPtr->padding = 0.f;
+	PsSettingsPtr->use_normal_map = static_cast<float>(use_normal_map);
 	deviceContext->Unmap(PsSettingsBuffer, 0);
 	deviceContext->PSSetConstantBuffers(1, 1, &PsSettingsBuffer);
 
 	// Set shader texture resource in the pixel shader.
 	deviceContext->PSSetShaderResources(0, 1, &texture);
 	deviceContext->PSSetShaderResources(1, 1, &heightMap);
+	deviceContext->PSSetShaderResources(2, 1, &normalMap);
 	for (int i = 0; i < N_LIGHTS * 6; ++i)
 	{
 		ID3D11ShaderResourceView* depthMap = maps[i]->getDepthMapSRV();
-		deviceContext->PSSetShaderResources(i + 2, 1, &depthMap);
+		deviceContext->PSSetShaderResources(i + 3, 1, &depthMap);
 	}
 	deviceContext->PSSetSamplers(0, 1, &sampleState);
 	deviceContext->PSSetSamplers(1, 1, &sampleStateShadow);
