@@ -3,6 +3,7 @@
 #pragma once
 
 #include "DXF.h"
+#include "TerrainMesh.h"
 
 using namespace std;
 using namespace DirectX;
@@ -37,7 +38,7 @@ public:
 	~DepthTerrainTessShader();
 
 	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& projection,
-		ID3D11ShaderResourceView* heightMap, XMFLOAT2& minMaxLOD, XMFLOAT2& minMaxDistance, float height_amplitude, Camera* camera);
+		TerrainMesh* terrain, Camera* camera);
 
 private:
 	void initShader(const wchar_t* vs, const wchar_t* ps);

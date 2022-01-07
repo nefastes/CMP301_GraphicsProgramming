@@ -3,6 +3,7 @@
 #pragma once
 
 #include "DXF.h"
+#include "TModel.h"
 
 using namespace std;
 using namespace DirectX;
@@ -39,7 +40,7 @@ public:
 	~DepthModelTessShader();
 
 	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& projection,
-		ID3D11ShaderResourceView* heightMap, XMFLOAT2& minMaxLOD, XMFLOAT2& minMaxDistance, XMFLOAT2& tessellation_factors, float height_amplitude, Camera* camera);
+		TModel* model, Camera* camera);
 
 private:
 	void initShader(const wchar_t* vs, const wchar_t* ps);

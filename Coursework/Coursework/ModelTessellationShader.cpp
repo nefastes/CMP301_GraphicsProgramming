@@ -43,8 +43,7 @@ ModelTessellationShader::~ModelTessellationShader()
 }
 
 void ModelTessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix,
-	ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* heightMap, ID3D11ShaderResourceView* normalMap, XMFLOAT2& minMaxLOD, XMFLOAT2& minMaxDistance,
-	XMFLOAT2& tessellation_factors, float height_amplitude, std::unique_ptr<ShadowMap>* maps, std::unique_ptr<Light>* light, Camera* camera, bool render_normals)
+	TModel* model, std::unique_ptr<ShadowMap>* maps, std::unique_ptr<Light>* light, Camera* camera, bool render_normals)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -59,9 +58,9 @@ void ModelTessellationShader::setShaderParameters(ID3D11DeviceContext* deviceCon
 	HsSettingsBufferType* HsSettingsPtr = (HsSettingsBufferType*)mappedResource.pData;
 	XMFLOAT3 cameraPos = camera->getPosition();
 	HsSettingsPtr->tessellationCenterPosition = XMFLOAT4(cameraPos.x, cameraPos.y, cameraPos.z, 1.f);
-	HsSettingsPtr->minMaxLOD = minMaxLOD;
-	HsSettingsPtr->minMaxDistance = minMaxDistance;
-	HsSettingsPtr->tessellation_factors = tessellation_factors;
+	HsSettingsPtr->minMaxLOD = XMFLOAT2(0.f, 0.f);
+	HsSettingsPtr->minMaxDistance = XMFLOAT2(0.f, 0.f);
+	HsSettingsPtr->tessellation_factors = *model->getPtrTessellationFactors();
 	HsSettingsPtr->padding = XMFLOAT2(0.f, 0.f);
 	deviceContext->Unmap(HsSettingsBuffer, 0);
 	deviceContext->HSSetConstantBuffers(0, 1, &HsSettingsBuffer);
@@ -85,14 +84,15 @@ void ModelTessellationShader::setShaderParameters(ID3D11DeviceContext* deviceCon
 	}
 	deviceContext->Unmap(matrixBuffer, 0);
 	deviceContext->DSSetConstantBuffers(0, 1, &matrixBuffer);
-	deviceContext->DSSetShaderResources(0, 1, &heightMap);
-	deviceContext->DSSetShaderResources(1, 1, &normalMap);
+	deviceContext->DSSetShaderResources(0, 1, model->getPtrTextureHeightMap());
+	deviceContext->DSSetShaderResources(1, 1, model->getPtrTextureNormalMap());
 	deviceContext->DSSetSamplers(0, 1, &sampleState);
 	//DS Settings buffer
 	result = deviceContext->Map(DsSettingsBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	DsSettingsBufferType* DsSettingsPtr = (DsSettingsBufferType*)mappedResource.pData;
-	DsSettingsPtr->height_amplitude = height_amplitude;
-	DsSettingsPtr->padding = XMFLOAT3(0.f, 0.f, 0.f);
+	DsSettingsPtr->height_amplitude = *model->getPtrHeightAmplitude();
+	DsSettingsPtr->use_normal_map = *model->getPtrNormalMap();
+	DsSettingsPtr->padding = XMFLOAT2(0.f, 0.f);
 	deviceContext->Unmap(DsSettingsBuffer, 0);
 	deviceContext->DSSetConstantBuffers(1, 1, &DsSettingsBuffer);
 
@@ -121,8 +121,8 @@ void ModelTessellationShader::setShaderParameters(ID3D11DeviceContext* deviceCon
 	deviceContext->PSSetConstantBuffers(0, 1, &lightBuffer);
 
 	// Set shader texture resource in the pixel shader.
-	deviceContext->PSSetShaderResources(0, 1, &texture);
-	deviceContext->PSSetShaderResources(1, 1, &normalMap);
+	deviceContext->PSSetShaderResources(0, 1, model->getPtrTextureDiffuse());
+	deviceContext->PSSetShaderResources(1, 1, model->getPtrTextureNormalMap());
 	for (int i = 0; i < N_LIGHTS * 6; ++i)
 	{
 		ID3D11ShaderResourceView* depthMap = maps[i]->getDepthMapSRV();

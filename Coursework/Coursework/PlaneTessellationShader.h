@@ -1,5 +1,6 @@
 #pragma once
 #include "DXF.h"
+#include "TerrainMesh.h"
 
 #define N_LIGHTS 4
 
@@ -55,9 +56,8 @@ public:
 	PlaneTessellationShader(ID3D11Device* device, HWND hwnd);
 	~PlaneTessellationShader();
 
-	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& projection,
-		ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* heightMap, ID3D11ShaderResourceView* normalMap, XMFLOAT2& minMaxLOD, XMFLOAT2& minMaxDistance, XMFLOAT2& tex_scale,
-		float height_amplitude, std::unique_ptr<ShadowMap>* maps, std::unique_ptr<Light>* light, Camera* camera, bool render_normals, bool use_normal_map);
+	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& projection, TerrainMesh* terrain,
+		std::unique_ptr<ShadowMap>* maps, std::unique_ptr<Light>* light, Camera* camera, bool render_normals, bool use_normal_map);
 
 private:
 	void initShader(const wchar_t* vsFilename, const wchar_t* psFilename);

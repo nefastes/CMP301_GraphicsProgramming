@@ -185,6 +185,7 @@
     <ClCompile Include="ShadowShader.cpp" />
     <ClCompile Include="TerrainMesh.cpp" />
     <ClCompile Include="TextureShader.cpp" />
+    <ClCompile Include="TModel.cpp" />
     <ClCompile Include="VertBlurCompute.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -206,6 +207,7 @@
     <ClInclude Include="ShadowShader.h" />
     <ClInclude Include="TerrainMesh.h" />
     <ClInclude Include="TextureShader.h" />
+    <ClInclude Include="TModel.h" />
     <ClInclude Include="VertBlurCompute.h" />
   </ItemGroup>
   <ItemGroup>

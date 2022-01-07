@@ -48,8 +48,7 @@ PlaneTessellationShader::~PlaneTessellationShader()
 }
 
 void PlaneTessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix,
-	ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* heightMap, ID3D11ShaderResourceView* normalMap, XMFLOAT2& minMaxLOD, XMFLOAT2& minMaxDistance, XMFLOAT2& tex_scale,
-	float height_amplitude, std::unique_ptr<ShadowMap>* maps, std::unique_ptr<Light>* light, Camera* camera, bool render_normals, bool use_normal_map)
+	TerrainMesh* terrain, std::unique_ptr<ShadowMap>* maps, std::unique_ptr<Light>* light, Camera* camera, bool render_normals, bool use_normal_map)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -64,8 +63,8 @@ void PlaneTessellationShader::setShaderParameters(ID3D11DeviceContext* deviceCon
 	HsSettingsBufferType* HsSettingsPtr = (HsSettingsBufferType*)mappedResource.pData;
 	XMFLOAT3 cameraPos = camera->getPosition();
 	HsSettingsPtr->tessellationCenterPosition = XMFLOAT4(cameraPos.x, cameraPos.y, cameraPos.z, 1.f);
-	HsSettingsPtr->minMaxLOD = minMaxLOD;
-	HsSettingsPtr->minMaxDistance = minMaxDistance;
+	HsSettingsPtr->minMaxLOD = *terrain->getPtrMinMaxLOD();
+	HsSettingsPtr->minMaxDistance = *terrain->getPtrMinMaxDistance();
 	deviceContext->Unmap(HsSettingsBuffer, 0);
 	deviceContext->HSSetConstantBuffers(0, 1, &HsSettingsBuffer);
 
@@ -88,12 +87,12 @@ void PlaneTessellationShader::setShaderParameters(ID3D11DeviceContext* deviceCon
 	}
 	deviceContext->Unmap(matrixBuffer, 0);
 	deviceContext->DSSetConstantBuffers(0, 1, &matrixBuffer);
-	deviceContext->DSSetShaderResources(0, 1, &heightMap);
+	deviceContext->DSSetShaderResources(0, 1, terrain->getPtrTextureHeightMap());
 	deviceContext->DSSetSamplers(0, 1, &sampleStateHeightMap);
 	//DS Settings buffer
 	result = deviceContext->Map(DsSettingsBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	DsSettingsBufferType* DsSettingsPtr = (DsSettingsBufferType*)mappedResource.pData;
-	DsSettingsPtr->height_amplitude = height_amplitude;
+	DsSettingsPtr->height_amplitude = *terrain->getPtrHeightAmplitude();
 	DsSettingsPtr->padding = XMFLOAT3(0.f, 0.f, 0.f);
 	deviceContext->Unmap(DsSettingsBuffer, 0);
 	deviceContext->DSSetConstantBuffers(1, 1, &DsSettingsBuffer);
@@ -125,16 +124,16 @@ void PlaneTessellationShader::setShaderParameters(ID3D11DeviceContext* deviceCon
 	//PS settings buffer
 	result = deviceContext->Map(PsSettingsBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	PsSettingsBufferType* PsSettingsPtr = (PsSettingsBufferType*)mappedResource.pData;
-	PsSettingsPtr->texture_scale = tex_scale;
-	PsSettingsPtr->height_amplitude = height_amplitude;
+	PsSettingsPtr->texture_scale = *terrain->getPtrTextureScale();
+	PsSettingsPtr->height_amplitude = *terrain->getPtrHeightAmplitude();
 	PsSettingsPtr->use_normal_map = static_cast<float>(use_normal_map);
 	deviceContext->Unmap(PsSettingsBuffer, 0);
 	deviceContext->PSSetConstantBuffers(1, 1, &PsSettingsBuffer);
 
 	// Set shader texture resource in the pixel shader.
-	deviceContext->PSSetShaderResources(0, 1, &texture);
-	deviceContext->PSSetShaderResources(1, 1, &heightMap);
-	deviceContext->PSSetShaderResources(2, 1, &normalMap);
+	deviceContext->PSSetShaderResources(0, 1, terrain->getPtrTextureDiffuse());
+	deviceContext->PSSetShaderResources(1, 1, terrain->getPtrTextureHeightMap());
+	deviceContext->PSSetShaderResources(2, 1, terrain->getPtrTextureNormalMap());
 	for (int i = 0; i < N_LIGHTS * 6; ++i)
 	{
 		ID3D11ShaderResourceView* depthMap = maps[i]->getDepthMapSRV();

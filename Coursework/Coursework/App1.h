@@ -21,7 +21,7 @@
 #include "BloomCombineCompute.h"
 #include "BloomCompute.h"
 #include "GrassShader.h"
-
+#include "TModel.h"
 #include "TerrainMesh.h"
 
 #include <memory>
@@ -47,7 +47,7 @@ protected:
 
 private:
 	void renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique_ptr<ShadowMap>* maps, bool renderDepth);
-	void renderTessellatedModel(AModel* model, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& proj, const XMFLOAT3& scale,
+	void renderTessellatedModel(TModel* model, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& proj, const XMFLOAT3& scale,
 		std::unique_ptr<ShadowMap>* maps, ID3D11ShaderResourceView* texture_diffuse, ID3D11ShaderResourceView* texture_normal,
 		ID3D11ShaderResourceView* texture_height, bool renderDepth);
 	void renderTessellatedTerrain(TerrainMesh* terrain, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& proj,
@@ -77,12 +77,11 @@ private:
 	std::unique_ptr<RenderTexture> bloom_scene_render_target;
 
 	//Models
-	std::unique_ptr<AModel> model_mei;
-	std::unique_ptr<AModel> model_totoro;
-	std::unique_ptr<AModel> model_rock;
-	std::unique_ptr<AModel> model_bench;
-	std::unique_ptr<AModel> model_lamp;
-	std::unique_ptr<AModel> model_pillar;
+	std::unique_ptr<TModel> model_mei;
+	std::unique_ptr<TModel> model_totoro;
+	std::unique_ptr<TModel> model_rock;
+	std::unique_ptr<TModel> model_bench;
+	std::unique_ptr<TModel> model_pillar;
 
 	//Meshes
 	std::unique_ptr<OrthoMesh> orthomesh_debug_shadow_maps;
@@ -115,11 +114,8 @@ private:
 	std::array<XMFLOAT4, N_LIGHTS> gui_light_specular_colour;
 	std::array<float, N_LIGHTS> gui_light_shadow_bias;
 
-	//Gui tessellation
-	XMFLOAT2 gui_model_tessellation_factors;
-	float gui_model_height_amplitude;
-
 	//Gui Bloom
+	bool gui_bloom_enable;
 	float gui_bloom_threshold;
 	int gui_bloom_blur_iterations;
 };

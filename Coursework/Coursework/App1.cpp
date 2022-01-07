@@ -3,8 +3,7 @@
 #include "App1.h"
 
 App1::App1() : gui_shadow_map_display_index(0), gui_render_normals(false),
-gui_model_height_amplitude(0.f), gui_bloom_threshold(1.5f), gui_bloom_blur_iterations(10), gui_render_light_sphere(true),
-gui_model_tessellation_factors(XMFLOAT2(1.f, 1.f))
+gui_bloom_enable(true), gui_bloom_threshold(1.5f), gui_bloom_blur_iterations(10), gui_render_light_sphere(true)
 {
 	for (int i = 0; i < N_LIGHTS; ++i)
 	{
@@ -63,8 +62,9 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	textureMgr->loadTexture(L"model_rock_normal", L"res/models/rock_model_1/textures/Rock_1_Normal.jpg");
 	textureMgr->loadTexture(L"model_bench_diffuse", L"res/models/bench/benchs_diffuse.png");
 	textureMgr->loadTexture(L"model_bench_normal", L"res/models/bench/benchs_normal.png");
-	textureMgr->loadTexture(L"model_lamp_diffuse", L"res/models/lamp2/diffuse.png");
 	textureMgr->loadTexture(L"model_pillar_diffuse", L"res/models/pillar/Textures/Marble_Base_Color.jpg");
+	textureMgr->loadTexture(L"model_pillar_normal", L"res/models/pillar/Textures/Marble_Normal_OpenGL.jpg");
+	textureMgr->loadTexture(L"model_pillar_height", L"res/models/pillar/Textures/Marble_Height.jpg");
 
 	//// Init shaders
 	texture_shader = std::make_unique<TextureShader>(renderer->getDevice(), hwnd);
@@ -88,8 +88,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	int shadowmapWidth = 4096;	//MAX: 16'384
 	int shadowmapHeight = 4096;
 	//Create as much shadowMaps as there are lights * 6 (for point lights)
-	for(int i = 0; i < N_LIGHTS * 6; ++i)
-		shadowmap[i] = std::make_unique<ShadowMap>(renderer->getDevice(), shadowmapWidth, shadowmapHeight);
+	for(int i = 0; i < N_LIGHTS * 6; ++i) shadowmap[i] = std::make_unique<ShadowMap>(renderer->getDevice(), shadowmapWidth, shadowmapHeight);
 
 	//// Init lights
 	for (int i = 0; i < N_LIGHTS; ++i)
@@ -126,20 +125,39 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	*mesh_terrain->getPtrMinMaxDistance() = XMFLOAT2(50.f, 75.f);
 	*mesh_terrain->getPtrMinMaxLOD() = XMFLOAT2(1.f, 15.f);
 	*mesh_terrain->getPtrTextureScale() = XMFLOAT2(20.f, 20.f);
+	mesh_terrain->setTextureDiffuse(textureMgr->getTexture(L"grass"));
+	mesh_terrain->setTextureHeightMap(textureMgr->getTexture(L"heightMap"));
 	mesh_floor = std::make_unique<TerrainMesh>(renderer->getDevice(), renderer->getDeviceContext());
 	*mesh_floor->getPtrHeightAmplitude() = 1.f;
 	*mesh_floor->getPtrMinMaxDistance() = XMFLOAT2(50.f, 75.f);
 	*mesh_floor->getPtrMinMaxLOD() = XMFLOAT2(1.f, 15.f);
 	*mesh_floor->getPtrTextureScale() = XMFLOAT2(20.f, 20.f);
+	mesh_floor->setTextureDiffuse(textureMgr->getTexture(L"marble_diffuse"));
+	mesh_floor->setTextureNormalMap(textureMgr->getTexture(L"marble_normal"));
+	mesh_floor->setTextureHeightMap(textureMgr->getTexture(L"marble_height"));
 
 	//// Init additional objects
 	mesh_light_debug_sphere = std::make_unique<SphereMesh>(renderer->getDevice(), renderer->getDeviceContext());
-	model_mei = std::make_unique<AModel>(renderer->getDevice(), "res/models/mei/Mei.obj");
-	model_totoro = std::make_unique<AModel>(renderer->getDevice(), "res/models/totoro/totoro.fbx");
-	model_rock = std::make_unique<AModel>(renderer->getDevice(), "res/models/rock_model_1/rock.obj");
-	model_bench = std::make_unique<AModel>(renderer->getDevice(), "res/models/bench/bench.obj");
-	model_lamp = std::make_unique<AModel>(renderer->getDevice(), "res/models/lamp2/vsl.obj");
-	model_pillar = std::make_unique<AModel>(renderer->getDevice(), "res/models/pillar/Column_HP.obj");
+
+	model_mei = std::make_unique<TModel>(renderer->getDevice(), "res/models/mei/Mei.obj");
+	model_mei->setTextureDiffuse(textureMgr->getTexture(L"model_mei_diffuse"));
+
+	model_totoro = std::make_unique<TModel>(renderer->getDevice(), "res/models/totoro/totoro.fbx");
+	model_totoro->setTextureDiffuse(textureMgr->getTexture(L"model_totoro_diffuse"));
+
+	model_rock = std::make_unique<TModel>(renderer->getDevice(), "res/models/rock_model_1/rock.obj");
+	model_rock->setTextureDiffuse(textureMgr->getTexture(L"model_rock_diffuse"));
+	model_rock->setTextureNormalMap(textureMgr->getTexture(L"model_rock_normal"));
+	model_rock->setTextureHeightMap(textureMgr->getTexture(L"model_rock_height"));
+
+	model_bench = std::make_unique<TModel>(renderer->getDevice(), "res/models/bench/bench.obj");
+	model_bench->setTextureDiffuse(textureMgr->getTexture(L"model_bench_diffuse"));
+	model_bench->setTextureNormalMap(textureMgr->getTexture(L"model_bench_normal"));
+
+	model_pillar = std::make_unique<TModel>(renderer->getDevice(), "res/models/pillar/Column_HP.obj");
+	model_pillar->setTextureDiffuse(textureMgr->getTexture(L"model_pillar_diffuse"));
+	model_pillar->setTextureNormalMap(textureMgr->getTexture(L"model_pillar_normal"));
+	model_pillar->setTextureHeightMap(textureMgr->getTexture(L"model_pillar_height"));
 }
 
 App1::~App1()
@@ -181,7 +199,7 @@ bool App1::render()
 	// Render the scene in a render target for post-processing
 	firstPass();
 	// Apply a Bloom post-processing effect
-	bloomPass();
+	if(gui_bloom_enable) bloomPass();
 	// Render final output
 	finalPass();
 
@@ -210,12 +228,6 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 	world = XMMatrixScaling(0.0675f, 0.0675f, 0.0675f);
 	world = XMMatrixMultiply(world, XMMatrixTranslation(17.5f, 1.f, 13.f));
 	renderTessellatedModel(model_bench.get(), world, view, proj, XMFLOAT3(0.0675f, 0.0675f, 0.0675f), maps, textureMgr->getTexture(L"model_bench_diffuse"),
-		NULL, NULL, renderDepth);
-
-	//Lamp
-	world = XMMatrixScaling(0.1f, 0.1f, 0.1f);
-	world = XMMatrixMultiply(world, XMMatrixTranslation(0.f, 20.f, 0.f));
-	renderTessellatedModel(model_lamp.get(), world, view, proj, XMFLOAT3(0.1f, 0.1f, 0.1f), maps, textureMgr->getTexture(L"model_lamp_diffuse"),
 		NULL, NULL, renderDepth);
 
 	//Mei Display
@@ -255,7 +267,7 @@ void App1::renderObjects(const XMMATRIX& view, const XMMATRIX& proj, std::unique
 		NULL, NULL, renderDepth);
 }
 
-void App1::renderTessellatedModel(AModel* model, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& proj, const XMFLOAT3& scale,
+void App1::renderTessellatedModel(TModel* model, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& proj, const XMFLOAT3& scale,
 	std::unique_ptr<ShadowMap>* maps, ID3D11ShaderResourceView* texture_diffuse, ID3D11ShaderResourceView* texture_normal,
 	ID3D11ShaderResourceView* texture_height, bool renderDepth)
 {
@@ -263,18 +275,12 @@ void App1::renderTessellatedModel(AModel* model, const XMMATRIX& world, const XM
 	if (renderDepth)
 	{
 		depth_tess_model_shader->setShaderParameters(
-			renderer->getDeviceContext(), world, view, proj,
-			NULL, XMFLOAT2(0.f, 0.f), XMFLOAT2(0.f, 0.f), gui_model_tessellation_factors, gui_model_height_amplitude, camera
-		);
+			renderer->getDeviceContext(), world, view, proj, model, camera);
 		depth_tess_model_shader->render(renderer->getDeviceContext(), model->getIndexCount());
 	}
 	else
 	{
-		model_tess_shader->setShaderParameters(
-			renderer->getDeviceContext(), world, view, proj,
-			texture_diffuse, texture_height, texture_normal,
-			XMFLOAT2(0.f, 0.f), XMFLOAT2(0.f, 0.f), gui_model_tessellation_factors, gui_model_height_amplitude, maps, light.data(), camera, gui_render_normals
-		);
+		model_tess_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj, model, maps, light.data(), camera, gui_render_normals);
 		model_tess_shader->render(renderer->getDeviceContext(), model->getIndexCount());
 	}
 }
@@ -285,15 +291,12 @@ void App1::renderTessellatedTerrain(TerrainMesh* terrain, const XMMATRIX& world,
 	terrain->sendData(renderer->getDeviceContext());
 	if (renderDepth)
 	{
-		depth_tess_terrain_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
-			heightmap, *terrain->getPtrMinMaxLOD(), *terrain->getPtrMinMaxDistance(), *terrain->getPtrHeightAmplitude(), camera);
+		depth_tess_terrain_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj, terrain, camera);
 		depth_tess_terrain_shader->render(renderer->getDeviceContext(), terrain->getIndexCount());
 	}
 	else
 	{
-		terrain_tess_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
-			texture_diffuse, heightmap, normalmap, *terrain->getPtrMinMaxLOD(), *terrain->getPtrMinMaxDistance(), *terrain->getPtrTextureScale(),
-			*terrain->getPtrHeightAmplitude(), maps, light.data(), camera, gui_render_normals, *terrain->getPtrNormalMap());
+		terrain_tess_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj, terrain, maps, light.data(), camera, gui_render_normals, *terrain->getPtrNormalMap());
 		terrain_tess_shader->render(renderer->getDeviceContext(), terrain->getIndexCount());
 
 		/*grass_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
@@ -365,11 +368,14 @@ void App1::firstPass()
 		mesh_light_debug_sphere->sendData(renderer->getDeviceContext());
 		for (int i = 0; i < N_LIGHTS; ++i)
 		{
+			//Get the type of the light
+			int type = light[i]->getType();
+
 			//If light is off, dont draw sphere
-			if (!light[i]->getType()) continue;
+			if (!type) continue;
 
 			XMFLOAT3 light_pos = light[i]->getPosition();
-			worldMatrix = XMMatrixScaling(.5f, .5f, .5f);
+			type == 1 ? worldMatrix = XMMatrixScaling(10.f, 10.f, 10.f) : worldMatrix = XMMatrixScaling(.5f, .5f, .5f);
 			worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(light_pos.x, light_pos.y, light_pos.z));
 			light_debug_shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, light[i].get());
 			light_debug_shader->render(renderer->getDeviceContext(), mesh_light_debug_sphere->getIndexCount());
@@ -438,7 +444,7 @@ void App1::finalPass()
 	//Render the main scene after post processing
 	renderer->setZBuffer(false);
 	orthomesh_display->sendData(renderer->getDeviceContext());
-	texture_shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, bloom_combine_compute->getShaderResourceView());
+	texture_shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, gui_bloom_enable ? bloom_combine_compute->getShaderResourceView() : bloom_scene_render_target->getShaderResourceView());
 	texture_shader->render(renderer->getDeviceContext(), orthomesh_display->getIndexCount());
 	renderer->setZBuffer(true);
 
@@ -522,13 +528,71 @@ void App1::gui()
 
 	if (ImGui::CollapsingHeader("Model Mesh Settings:"))
 	{
-		ImGui::SliderFloat("Tessellation Factor Inside", &gui_model_tessellation_factors.x, 1.f, 64.f);
-		ImGui::SliderFloat("Tessellation Factor Outside", &gui_model_tessellation_factors.y, 1.f, 64.f);
-		ImGui::SliderFloat("Tessellation Height Amplitude", &gui_model_height_amplitude, 0.f, 20.f);
+		if (ImGui::TreeNode("Pillar"))
+		{
+			ImGui::PushID(0);
+
+			ImGui::Checkbox("Use Normal Map", model_pillar->getPtrNormalMap());
+			ImGui::SliderFloat("Tessellation Factor Inside", &model_pillar->getPtrTessellationFactors()->x, 1.f, 64.f);
+			ImGui::SliderFloat("Tessellation Factor Outside", &model_pillar->getPtrTessellationFactors()->y, 1.f, 64.f);
+			ImGui::SliderFloat("Tessellation Height Amplitude", model_pillar->getPtrHeightAmplitude(), 0.f, 20.f);
+
+			ImGui::PopID();
+			ImGui::TreePop();
+		}
+		if (ImGui::TreeNode("Bench"))
+		{
+			ImGui::PushID(2);
+
+			ImGui::Checkbox("Use Normal Map", model_bench->getPtrNormalMap());
+			ImGui::SliderFloat("Tessellation Factor Inside", &model_bench->getPtrTessellationFactors()->x, 1.f, 64.f);
+			ImGui::SliderFloat("Tessellation Factor Outside", &model_bench->getPtrTessellationFactors()->y, 1.f, 64.f);
+			ImGui::SliderFloat("Tessellation Height Amplitude", model_bench->getPtrHeightAmplitude(), 0.f, 20.f);
+
+			ImGui::PopID();
+			ImGui::TreePop();
+		}
+		if (ImGui::TreeNode("Rock"))
+		{
+			ImGui::PushID(3);
+
+			ImGui::Checkbox("Use Normal Map", model_rock->getPtrNormalMap());
+			ImGui::SliderFloat("Tessellation Factor Inside", &model_rock->getPtrTessellationFactors()->x, 1.f, 64.f);
+			ImGui::SliderFloat("Tessellation Factor Outside", &model_rock->getPtrTessellationFactors()->y, 1.f, 64.f);
+			ImGui::SliderFloat("Tessellation Height Amplitude", model_rock->getPtrHeightAmplitude(), 0.f, 20.f);
+
+			ImGui::PopID();
+			ImGui::TreePop();
+		}
+		if (ImGui::TreeNode("Mei"))
+		{
+			ImGui::PushID(4);
+
+			ImGui::Text("This model does not have a normal map!");
+			ImGui::SliderFloat("Tessellation Factor Inside", &model_mei->getPtrTessellationFactors()->x, 1.f, 64.f);
+			ImGui::SliderFloat("Tessellation Factor Outside", &model_mei->getPtrTessellationFactors()->y, 1.f, 64.f);
+			ImGui::SliderFloat("Tessellation Height Amplitude", model_mei->getPtrHeightAmplitude(), 0.f, 20.f);
+
+			ImGui::PopID();
+			ImGui::TreePop();
+		}
+		if (ImGui::TreeNode("Totoro"))
+		{
+			ImGui::PushID(5);
+
+			ImGui::Text("This model does not have a normal map!");
+			ImGui::SliderFloat("Tessellation Factor Inside", &model_totoro->getPtrTessellationFactors()->x, 1.f, 64.f);
+			ImGui::SliderFloat("Tessellation Factor Outside", &model_totoro->getPtrTessellationFactors()->y, 1.f, 64.f);
+			ImGui::SliderFloat("Tessellation Height Amplitude", model_totoro->getPtrHeightAmplitude(), 0.f, 20.f);
+
+			ImGui::PopID();
+			ImGui::TreePop();
+		}
 	}
 
 	if (ImGui::CollapsingHeader("Bloom Settings:"))
 	{
+		ImGui::Checkbox("Enable Bloom Effect", &gui_bloom_enable);
 		ImGui::DragFloat("Threshold", &gui_bloom_threshold, 0.001f, 0.f, 10.f);
 		ImGui::SliderInt("Blur Passes", &gui_bloom_blur_iterations, 1, 20);
 	}

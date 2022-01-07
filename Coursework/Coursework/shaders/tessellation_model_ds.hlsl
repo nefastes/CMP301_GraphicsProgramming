@@ -19,7 +19,8 @@ cbuffer MatrixBuffer : register(b0)
 cbuffer SettingsBuffer : register(b1)
 {
     float height_amplitude;
-    float3 padding;
+	float use_normal_map;
+    float2 padding;
 };
 
 struct ConstantOutputType
@@ -40,7 +41,8 @@ struct OutputType
 {
 	float4 position : SV_POSITION;
 	float2 tex : TEXCOORD0;
-	float3 normal : NORMAL;
+	float3 normal : NORMAL0;
+	float use_normal_map : NORMAL1;
 	float3 worldPosition : TEXCOORD1;
     float3 viewVector : TEXCOORD2;
     float4 lightViewPos[N_LIGHTS * 6] : TEXCOORD3;
@@ -75,12 +77,11 @@ OutputType main(ConstantOutputType input, float3 uvw : SV_DomainLocation, const 
         patch[2].tex * uvw.z;
 	
 	// Send the input normal into the pixel shader.
-    //normal = normalMap.SampleLevel(Sampler, texCoord, 0).xyz;
-    output.normal = mul(normal, (float3x3) worldMatrix);
+	output.normal = (bool)use_normal_map * mul(normalMap.SampleLevel(Sampler, texCoord, 0).xyz, (float3x3) worldMatrix) + !(bool)use_normal_map * mul(normal, (float3x3) worldMatrix);
     output.normal = normalize(output.normal);
 
 	//Get the height of the vertex from the heightmap
-    float3 direction = patch[0].normal * getHeight(texCoord);
+	float3 direction = normal * getHeight(texCoord);
     float4x4 translation =
     {
         1.f, 0.f, 0.f, 0.f,

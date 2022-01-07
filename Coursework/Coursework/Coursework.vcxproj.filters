@@ -138,6 +138,9 @@
     <ClCompile Include="GrassShader.cpp">
       <Filter>Source Files\Tessellation</Filter>
     </ClCompile>
+    <ClCompile Include="TModel.cpp">
+      <Filter>Source Files\Tessellation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App1.h">
@@ -195,6 +198,9 @@
       <Filter>Header Files\Compute</Filter>
     </ClInclude>
     <ClInclude Include="GrassShader.h">
+      <Filter>Header Files\Tessellation</Filter>
+    </ClInclude>
+    <ClInclude Include="TModel.h">
       <Filter>Header Files\Tessellation</Filter>
     </ClInclude>
   </ItemGroup>

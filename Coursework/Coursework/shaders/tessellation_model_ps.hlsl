@@ -24,8 +24,9 @@ cbuffer LightBuffer : register(b0)
 struct InputType
 {
     float4 position : SV_POSITION;
-    float2 tex : TEXCOORD0;
-    float3 normal : NORMAL;
+	float2 tex : TEXCOORD0;
+	float3 normal : NORMAL0;
+	float use_normal_map : NORMAL1;
     float3 worldPosition : TEXCOORD1;
     float3 viewVector : TEXCOORD2;
     float4 lightViewPos[N_LIGHTS * 6] : TEXCOORD3;

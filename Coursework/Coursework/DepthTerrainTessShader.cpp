@@ -94,7 +94,7 @@ void DepthTerrainTessShader::initShader(const wchar_t* vsFilename, const wchar_t
 }
 
 void DepthTerrainTessShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix,
-	ID3D11ShaderResourceView* heightMap, XMFLOAT2& minMaxLOD, XMFLOAT2& minMaxDistance, float height_amplitude, Camera* camera)
+	TerrainMesh* terrain, Camera* camera)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -109,8 +109,8 @@ void DepthTerrainTessShader::setShaderParameters(ID3D11DeviceContext* deviceCont
 	HsSettingsBufferType* HsSettingsPtr = (HsSettingsBufferType*)mappedResource.pData;
 	XMFLOAT3 cameraPos = camera->getPosition();
 	HsSettingsPtr->tessellationCenterPosition = XMFLOAT4(cameraPos.x, cameraPos.y, cameraPos.z, 1.f);
-	HsSettingsPtr->minMaxLOD = minMaxLOD;
-	HsSettingsPtr->minMaxDistance = minMaxDistance;
+	HsSettingsPtr->minMaxLOD = *terrain->getPtrMinMaxLOD();
+	HsSettingsPtr->minMaxDistance = *terrain->getPtrMinMaxDistance();
 	deviceContext->Unmap(HsSettingsBuffer, 0);
 	deviceContext->HSSetConstantBuffers(0, 1, &HsSettingsBuffer);
 
@@ -122,12 +122,12 @@ void DepthTerrainTessShader::setShaderParameters(ID3D11DeviceContext* deviceCont
 	dataPtr->projection = tproj;
 	deviceContext->Unmap(matrixBuffer, 0);
 	deviceContext->DSSetConstantBuffers(0, 1, &matrixBuffer);
-	deviceContext->DSSetShaderResources(0, 1, &heightMap);
+	deviceContext->DSSetShaderResources(0, 1, terrain->getPtrTextureHeightMap());
 	deviceContext->DSSetSamplers(0, 1, &sampleState);
 	//Settings buffer
 	result = deviceContext->Map(DsSettingsBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	DsSettingsBufferType* DsSettingsPtr = (DsSettingsBufferType*)mappedResource.pData;
-	DsSettingsPtr->height_amplitude = height_amplitude;
+	DsSettingsPtr->height_amplitude = *terrain->getPtrHeightAmplitude();
 	DsSettingsPtr->padding = XMFLOAT3(0.f, 0.f, 0.f);
 	deviceContext->Unmap(DsSettingsBuffer, 0);
 	deviceContext->DSSetConstantBuffers(1, 1, &DsSettingsBuffer);
