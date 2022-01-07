@@ -2,7 +2,7 @@ New coursework plan:
 	V finish tessellated plane with heightmap (could optmise dynamically assign GPU memory (can send less useless empty marices))
 	V do a simple post processing bloom (gloom?) OR dynamic cube maps???
 	X grass instanced on the geometry shader (not manipulated) -> Sadly didn't have time for it ):
-	- generate TerrainMesh with a translation and scale
+	V generate TerrainMesh with a translation and scale
 	- rewrite blur compute shader
 	- clean code
 	- soft shadows

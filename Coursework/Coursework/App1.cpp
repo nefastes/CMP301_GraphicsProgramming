@@ -24,7 +24,7 @@ gui_bloom_enable(true), gui_bloom_threshold(1.5f), gui_bloom_blur_iterations(10)
 		gui_light_specular_colour[i] = XMFLOAT4(1.f, 1.f, 1.f, 1.f);
 		gui_light_shadow_bias[i] = 0.004f;
 	}
-	//Light 1 custom setup
+	//Directional light custom setup
 	gui_light_type[0] = 1;
 	gui_light_direction[0] = XMFLOAT3(.25f, -.125f, .7f);
 	gui_light_position[0] = XMFLOAT3(-50.f, 30.f, -125.f);
@@ -33,12 +33,23 @@ gui_bloom_enable(true), gui_bloom_threshold(1.5f), gui_bloom_blur_iterations(10)
 	gui_light_ambient_colour[0] = XMFLOAT4(.3f, .3f, .3f, 1.f);	//Only the directional light gets an ambient component
 	gui_light_specular_power[0] = 40.f;
 
-	//Light 2 curstom setup
+	//Point light custom setup
 	gui_light_type[1] = 2;
 	gui_light_position[1] = XMFLOAT3(0.f, 15.f, 0.f);
 	gui_light_frustum[1] = XMFLOAT2(5.f, 100.f);
 	gui_light_diffuse_colour[1] = XMFLOAT4(1.f, .835f, .377f, 1.f);
 	gui_light_attenuation_factors[1] = XMFLOAT3(.5f, .25f, .00125f);
+
+	//Spotlight custom setup
+	gui_light_type[2] = 3;
+	gui_light_direction[2] = XMFLOAT3(-.264f, -.7f, .083f);
+	gui_light_position[2] = XMFLOAT3(15.f, 15.f, -2.f);
+	gui_light_frustum[2] = XMFLOAT2(6.75f, 100.f);
+	gui_light_diffuse_colour[2] = XMFLOAT4(.661f, .046f, .853f, 1.f);
+	gui_light_attenuation_factors[2] = XMFLOAT3(1.f, 0.f, 0.f);
+	gui_light_specular_power[2] = 215.f;
+	gui_light_specular_sameAsDiffuse[2] = false;
+	gui_light_specular_colour[2] = XMFLOAT4(0.f, .706f, 1.f, 1.f);
 }
 
 void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeight, Input *in, bool VSYNC, bool FULL_SCREEN)
@@ -104,7 +115,9 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 		light[i]->setSpotFalloff(gui_light_spot_falloff[i]);
 		light[i]->setSpotAngle(gui_light_spot_angle[i]);
 		light[i]->setSpecularPower(gui_light_specular_power[i]);
-		light[i]->setSpecularColour(gui_light_diffuse_colour[i].x, gui_light_diffuse_colour[i].y, gui_light_diffuse_colour[i].z, gui_light_diffuse_colour[i].w);	//init spec on diffuse
+		gui_light_specular_sameAsDiffuse[i] ?
+			light[i]->setSpecularColour(gui_light_diffuse_colour[i].x, gui_light_diffuse_colour[i].y, gui_light_diffuse_colour[i].z, gui_light_diffuse_colour[i].w) :
+			light[i]->setSpecularColour(gui_light_specular_colour[i].x, gui_light_specular_colour[i].y, gui_light_specular_colour[i].z, gui_light_specular_colour[i].w);
 		light[i]->setShadowBias(gui_light_shadow_bias[i]);
 		light[i]->generateOrthoMatrix(gui_light_scene_dimensions[i].x, gui_light_scene_dimensions[i].y, gui_light_frustum[i].x, gui_light_frustum[i].y);
 		light[i]->generateProjectionMatrix(gui_light_frustum[i].x, gui_light_frustum[i].y);
@@ -132,6 +145,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	*mesh_floor->getPtrMinMaxDistance() = XMFLOAT2(50.f, 75.f);
 	*mesh_floor->getPtrMinMaxLOD() = XMFLOAT2(1.f, 15.f);
 	*mesh_floor->getPtrTextureScale() = XMFLOAT2(10.f, 10.f);
+	*mesh_floor->getPtrNormalMap() = true;
 	mesh_floor->setTextureDiffuse(textureMgr->getTexture(L"marble_diffuse"));
 	mesh_floor->setTextureNormalMap(textureMgr->getTexture(L"marble_normal"));
 	mesh_floor->setTextureHeightMap(textureMgr->getTexture(L"marble_height"));
