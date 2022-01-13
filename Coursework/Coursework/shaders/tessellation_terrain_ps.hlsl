@@ -56,7 +56,8 @@ float3 calculateHeightMapNormal(float3 input_position, float2 uv)
     float v_step = HEIGHTMAP_SUB_SAMPLE / (float) texture_height;
 
 	//Transform per pixel step to world step
-	float worldStep = 1.f * u_step / (1.f / terrain_scale); //regle de trois
+	float world_step_x = u_step * terrain_scale;
+	float world_step_z = v_step * terrain_scale;
 	
 	//From Erin's explanation
     //Start by calculating the heights for all surrounding neighbours vertices
@@ -66,10 +67,10 @@ float3 calculateHeightMapNormal(float3 input_position, float2 uv)
     float East_Height = getHeight(float2(uv.x + u_step, uv.y));
     
     //Get the position of the neighbours vertices
-    float3 North = float3(input_position.x, North_Height, input_position.z - worldStep);
-    float3 East = float3(input_position.x + worldStep, East_Height, input_position.z);
-    float3 South = float3(input_position.x, South_Height, input_position.z + worldStep);
-    float3 West = float3(input_position.x - worldStep, West_Height, input_position.z);
+	float3 North = float3(input_position.x, North_Height, input_position.z - world_step_z);
+	float3 East = float3(input_position.x + world_step_x, East_Height, input_position.z);
+	float3 South = float3(input_position.x, South_Height, input_position.z + world_step_z);
+	float3 West = float3(input_position.x - world_step_x, West_Height, input_position.z);
     
     //Calculate the two tangents (tangent in x, bitangent in -z)
     //The tangents are estimated by making vectors between neighbours in the given axis
@@ -85,7 +86,6 @@ float3 calculateHeightMapNormal(float3 input_position, float2 uv)
 float3 sampleNormalMap(float2 uv, float3x3 TBN)
 {
 	float3 normal;
-
     //First sample the colour
 	normal = normalMap.Sample(diffuseSampler, uv).rgb;
     //The normal components are in range [0,1], but normals need to be in range [-1,1], so convert back
@@ -176,7 +176,7 @@ float4 main(InputType input) : SV_TARGET
         float dotVal = dot(lightVector, normalize(-direction[i].xyz));
 
 		//Trick by Erin to make the spotlight look nicer
-        float diff = dotVal - cos(3.1415f * spot_angle / 180.f); // if( dotVal > cosSpotAngle ) then (dotVal - cosSotAngle) will be positive TODO: gui cosSpotAngle
+        float diff = dotVal - cos(3.1415f * spot_angle / 180.f); // if( dotVal > cosSpotAngle ) then (dotVal - cosSotAngle) will be positive
         diff = max(0.f, diff); // if negative, not in light range (therefore set it to 0 for no lighting!)
         diff *= spot_falloff; // lets get most fractional vals
         diff = min(1.f, diff); // now all diff will be in [0,1] range. 0 is out of light, 1 is in light. 0 < x < 1 is in soft fall off

@@ -9,7 +9,8 @@ SamplerState Sampler : register(s0);
 cbuffer SettingsBuffer : register(b1)
 {
 	float height_amplitude;
-	float3 padding;
+	float2 texture_scale;
+	float padding;
 };
 
 struct ConstantOutputType
@@ -44,27 +45,21 @@ OutputType main(ConstantOutputType input, float2 uv : SV_DomainLocation, const O
 	float2 texCoord;
 	OutputType output;
  
-    // Determine the position of the new vertex.
-	vertexPosition.xz =
-        patch[0].position.xz * (1.f - uv.x) * (1.f - uv.y) +
-        patch[1].position.xz * uv.x * (1.f - uv.y) +
-        patch[2].position.xz * (1.f - uv.x) * uv.y +
-        patch[3].position.xz * uv.x * uv.y;
-	
-	normal = 
-		patch[0].normal * (1.f - uv.x) * (1.f - uv.y) +
-        patch[1].normal * uv.x * (1.f - uv.y) +
-        patch[2].normal * (1.f - uv.x) * uv.y +
-        patch[3].normal * uv.x * uv.y;
+	// Determine the position of the new vertex
+	float3 v1 = lerp(patch[0].position, patch[2].position, uv.y);
+	float3 v2 = lerp(patch[1].position, patch[3].position, uv.y);
+	vertexPosition = lerp(v1, v2, uv.x);
         
-	texCoord =
-		patch[0].tex * (1.f - uv.x) * (1.f - uv.y) +
-        patch[1].tex * uv.x * (1.f - uv.y) +
-        patch[2].tex * (1.f - uv.x) * uv.y +
-        patch[3].tex * uv.x * uv.y;
+	float2 t1 = lerp(patch[0].tex, patch[2].tex, uv.y);
+	float2 t2 = lerp(patch[1].tex, patch[3].tex, uv.y);
+	texCoord = lerp(t1, t2, uv.x);
+	
+	float3 n1 = lerp(patch[0].normal, patch[2].normal, uv.y);
+	float3 n2 = lerp(patch[1].normal, patch[3].normal, uv.y);
+	normal = lerp(n1, n2, uv.x);
 	
 	//Get the height of the vertex from the heightmap
-	vertexPosition.y = getHeight(texCoord);
+	vertexPosition.y += getHeight(texCoord * texture_scale); //the normal is up, no need to consider it here
 	
 	output.position = float4(vertexPosition, 1.0f);
 	output.normal = normal;

@@ -3,7 +3,7 @@ New coursework plan:
 	V do a simple post processing bloom (gloom?) OR dynamic cube maps???
 	X grass instanced on the geometry shader (not manipulated) -> Sadly didn't have time for it ):
 	V generate TerrainMesh with a translation and scale
-	- rewrite blur compute shader
+	V rewrite blur compute shader
 	- clean code
 	- soft shadows
 

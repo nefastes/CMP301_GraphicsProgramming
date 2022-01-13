@@ -7,8 +7,7 @@
 #define V_SYNC true
 #define FULL_SCREEN false
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow)
-{
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow){
 	App1* app = new App1();
 	System* system;
 

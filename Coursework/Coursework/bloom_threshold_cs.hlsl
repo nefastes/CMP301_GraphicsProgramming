@@ -17,8 +17,8 @@ void main(int3 groupThreadID : SV_GroupThreadID, int3 dispatchThreadID : SV_Disp
 	float4 out_colour = float4(0.f, 0.f, 0.f, 0.f);
 	//First get the pixel colour
 	float4 pixel = gInput[dispatchThreadID.xy]; //dispatchThreadID = pixel location
-	//Calculate the brightness by simply adding its compenents
-	float brightness = pixel.x + pixel.y + pixel.z;
+	//Calculate the brightness by using a relative luminance formula luminence = 0.2126 * R + 0.7152 * G + 0.0722 * B
+	float brightness = dot(pixel.xyz, float3(.2126f, .7152f, .0722f));
 	//If the brightness is above our threshold, output it to the texture, else ouput black
 	out_colour += (brightness > bloom_threshold) * pixel;
 	gOutput[dispatchThreadID.xy] = out_colour;

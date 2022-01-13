@@ -58,21 +58,17 @@ OutputType main(ConstantOutputType input, float2 uv : SV_DomainLocation, const O
 	float2 texCoord;
     OutputType output;
  
-    // Determine the position of the new vertex.
-	vertexPosition =
-        patch[0].position * (1.f - uv.x) * (1.f - uv.y) +
-        patch[1].position * uv.x * (1.f - uv.y) +
-        patch[2].position * (1.f - uv.x) * uv.y +
-        patch[3].position * uv.x * uv.y;
+    // Determine the position of the new vertex
+	float3 v1 = lerp(patch[0].position, patch[2].position, uv.y);
+	float3 v2 = lerp(patch[1].position, patch[3].position, uv.y);
+	vertexPosition = lerp(v1, v2, uv.x);
         
-	texCoord =
-		patch[0].tex * (1.f - uv.x) * (1.f - uv.y) +
-        patch[1].tex * uv.x * (1.f - uv.y) +
-        patch[2].tex * (1.f - uv.x) * uv.y +
-        patch[3].tex * uv.x * uv.y;
+	float2 t1 = lerp(patch[0].tex, patch[2].tex, uv.y);
+	float2 t2 = lerp(patch[1].tex, patch[3].tex, uv.y);
+	texCoord = lerp(t1, t2, uv.x);
 	
 	//Get the height of the vertex from the heightmap
-	vertexPosition.y += getHeight(texCoord * texture_scale);
+	vertexPosition.y += getHeight(texCoord * texture_scale); //the normal is up, no need to consider it here
 		    
     // Calculate the position of the new vertex against the world, view, and projection matrices.
     output.position = mul(float4(vertexPosition, 1.0f), worldMatrix);
@@ -95,7 +91,7 @@ OutputType main(ConstantOutputType input, float2 uv : SV_DomainLocation, const O
     // Send the input tex into the pixel shader.
     output.tex = texCoord;
 	
-	//Calculate the tangent and bitangent of the normal
+	//Define the tangent and bitangent of the original normal before displacement
 	//The normal on the surface is (0, 1, 0), therefore define its tangent and bitangent and form the TBN matrix
 	//Note: this will only work on the terrain, cause the normal is UP(0, 1, 0). If the normal is varaible, will need more trickery.
 	float3 tangent = normalize(mul((float3x3) worldMatrix, float3(1.f, 0.f, 0.f)));

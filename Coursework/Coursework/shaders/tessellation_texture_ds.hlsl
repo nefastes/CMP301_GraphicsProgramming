@@ -32,13 +32,10 @@ OutputType main(ConstantOutputType input, float2 uv : SV_DomainLocation, const O
 	float3 vertexPosition = float3(0.f, 0.f, 0.f);
     OutputType output;
  
-    // Determine the position of the new vertex.
-	vertexPosition.xz =
-        patch[0].position.xz * (1.f - uv.x) * (1.f - uv.y) +
-        patch[1].position.xz * uv.x * (1.f - uv.y) +
-        patch[2].position.xz * (1.f - uv.x) * uv.y +
-        patch[3].position.xz * uv.x * uv.y;
-        
+    // Determine the position of the new vertex
+	float3 v1 = lerp(patch[0].position, patch[2].position, uv.y);
+	float3 v2 = lerp(patch[1].position, patch[3].position, uv.y);
+	vertexPosition = lerp(v1, v2, uv.x);
 		    
     // Calculate the position of the new vertex against the world, view, and projection matrices.
     output.position = mul(float4(vertexPosition, 1.0f), worldMatrix);

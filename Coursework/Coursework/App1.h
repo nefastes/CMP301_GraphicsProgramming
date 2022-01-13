@@ -92,6 +92,7 @@ private:
 
 	//General guis
 	bool gui_render_normals;
+	bool gui_render_shadowmaps;
 
 	//up to MAX_N_LIGHTS lights, gui for the light properties 
 	bool gui_render_light_sphere;

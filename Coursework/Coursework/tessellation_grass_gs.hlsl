@@ -29,7 +29,6 @@ void main(triangle InputType input[3], inout TriangleStream<OutputType> triangle
 	OutputType output;
 	
 	float4 displacement = float4(0.f, 1.f, 0.f, 0.f);
-	float3 normal = input[0].normal;
 	float4 vertex = input[0].position + displacement;
 	output.position = mul(vertex, worldMatrix);
 	output.position = mul(output.position, viewMatrix);

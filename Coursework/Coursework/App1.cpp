@@ -3,7 +3,7 @@
 #include "App1.h"
 
 App1::App1() : gui_shadow_map_display_index(0), gui_render_normals(false),
-gui_bloom_enable(true), gui_bloom_threshold(1.5f), gui_bloom_blur_iterations(10), gui_render_light_sphere(true)
+gui_bloom_enable(true), gui_bloom_threshold(.5f), gui_bloom_blur_iterations(10), gui_render_light_sphere(true), gui_render_shadowmaps(false)
 {
 	for (int i = 0; i < N_LIGHTS; ++i)
 	{
@@ -26,8 +26,9 @@ gui_bloom_enable(true), gui_bloom_threshold(1.5f), gui_bloom_blur_iterations(10)
 	}
 	//Directional light custom setup
 	gui_light_type[0] = 1;
+	gui_light_scene_dimensions[0] = XMFLOAT2(95.f, 25.f);
 	gui_light_direction[0] = XMFLOAT3(.25f, -.125f, .7f);
-	gui_light_position[0] = XMFLOAT3(-50.f, 30.f, -125.f);
+	gui_light_position[0] = XMFLOAT3(-45.f, 22.5f, -125.f);
 	gui_light_frustum[0] = XMFLOAT2(45.f, 225.f);
 	gui_light_diffuse_colour[0] = XMFLOAT4(.995f, .586f, .0f, 1.f);
 	gui_light_ambient_colour[0] = XMFLOAT4(.3f, .3f, .3f, 1.f);	//Only the directional light gets an ambient component
@@ -144,7 +145,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	*mesh_floor->getPtrHeightAmplitude() = .45f;
 	*mesh_floor->getPtrMinMaxDistance() = XMFLOAT2(50.f, 75.f);
 	*mesh_floor->getPtrMinMaxLOD() = XMFLOAT2(1.f, 15.f);
-	*mesh_floor->getPtrTextureScale() = XMFLOAT2(10.f, 10.f);
+	*mesh_floor->getPtrTextureScale() = XMFLOAT2(10.f, 20.f);
 	*mesh_floor->getPtrNormalMap() = true;
 	mesh_floor->setTextureDiffuse(textureMgr->getTexture(L"marble_diffuse"));
 	mesh_floor->setTextureNormalMap(textureMgr->getTexture(L"marble_normal"));
@@ -314,8 +315,8 @@ void App1::renderTessellatedTerrain(TerrainMesh* terrain, const XMMATRIX& world,
 		terrain_tess_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj, terrain, maps, light.data(), camera, gui_render_normals);
 		terrain_tess_shader->render(renderer->getDeviceContext(), terrain->getIndexCount());
 
-		/*grass_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj,
-			textureMgr->getTexture(L"heightMap"), gui_min_max_LOD, gui_min_max_distance, gui_terrain_height_amplitude, camera);
+		//Grass geometry shader prototype on terrains
+		/*grass_shader->setShaderParameters(renderer->getDeviceContext(), world, view, proj, terrain, camera);
 		grass_shader->render(renderer->getDeviceContext(), mesh_terrain->getIndexCount());*/
 	}
 }
@@ -433,8 +434,8 @@ void App1::bloomPass()
 	bloom_combine_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 16.f), ceil((float)sHeight / 16.f), 1);
 	bloom_combine_compute->unbind(renderer->getDeviceContext());
 
-	//The below compute shader was a bad attempt at combining all the above compute shaders into a single one
-	//Had artefacts, performed worse -> discarded
+	/*The below compute shader was a bad attempt at combining all the above compute shaders into a single one
+	Had artefacts, performed worse -> discarded*/
 	/*bloom_compute->setShaderParameters(renderer->getDeviceContext(), bloom_scene_render_target->getShaderResourceView(), gui_bloom_threshold, gui_bloom_blur_iterations);
 	bloom_compute->compute(renderer->getDeviceContext(), ceil((float)sWidth / 16.f), ceil((float)sHeight / 16.f), 1);
 	bloom_compute->unbind(renderer->getDeviceContext());*/
@@ -464,11 +465,14 @@ void App1::finalPass()
 	renderer->setZBuffer(true);
 
 	//Render the shadow map outputs
-	renderer->setZBuffer(false);
-	orthomesh_debug_shadow_maps->sendData(renderer->getDeviceContext());
-	texture_shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, shadowmap[gui_shadow_map_display_index]->getDepthMapSRV());
-	texture_shader->render(renderer->getDeviceContext(), orthomesh_debug_shadow_maps->getIndexCount());
-	renderer->setZBuffer(true);
+	if (gui_render_shadowmaps)
+	{
+		renderer->setZBuffer(false);
+		orthomesh_debug_shadow_maps->sendData(renderer->getDeviceContext());
+		texture_shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, shadowmap[gui_shadow_map_display_index]->getDepthMapSRV());
+		texture_shader->render(renderer->getDeviceContext(), orthomesh_debug_shadow_maps->getIndexCount());
+		renderer->setZBuffer(true);
+	}
 
 
 	//// Render GUI
@@ -496,8 +500,6 @@ void App1::gui()
 	renderer->getDeviceContext()->HSSetShader(NULL, NULL, 0);
 	renderer->getDeviceContext()->DSSetShader(NULL, NULL, 0);
 
-	ImGui::ShowDemoWindow();
-
 	// Build UI
 	ImGui::Text("FPS: %.2f", timer->getFPS());
 	ImGui::Checkbox("Wireframe mode", &wireframeToggle);
@@ -505,8 +507,9 @@ void App1::gui()
 
 	ImGui::Separator();
 
+	ImGui::Checkbox("Debug ShadowMaps", &gui_render_shadowmaps);
 	ImGui::PushItemWidth(ImGui::GetWindowWidth() * .5f);
-	ImGui::SliderInt("Display Shadow Map Number", &gui_shadow_map_display_index, 0, 6 * N_LIGHTS);
+	if(gui_render_shadowmaps) ImGui::SliderInt("Display Shadow Map Number", &gui_shadow_map_display_index, 0, 6 * N_LIGHTS);
 	ImGui::PopItemWidth();
 
 
@@ -517,8 +520,8 @@ void App1::gui()
 			ImGui::PushID(0);
 
 			ImGui::Checkbox("Use Normal Map", mesh_floor->getPtrNormalMap());
-			ImGui::SliderFloat2("minMaxLOD", &mesh_floor->getPtrMinMaxLOD()->x, 0.f, 100.f);
-			ImGui::SliderFloat2("minMaxDistance", &mesh_floor->getPtrMinMaxDistance()->x, 0.f, 200.f);
+			ImGui::DragFloatRange2("minMaxLOD", &mesh_floor->getPtrMinMaxLOD()->x, &mesh_floor->getPtrMinMaxLOD()->y, .01f, 1.f, 64.f);
+			ImGui::DragFloatRange2("minMaxDistance", &mesh_floor->getPtrMinMaxDistance()->x, &mesh_floor->getPtrMinMaxDistance()->y, .01f, 0.f, 200.f);
 			ImGui::SliderFloat2("Texture Scale", &mesh_floor->getPtrTextureScale()->x, .1f, 20.f);
 			ImGui::SliderFloat("Height Amplitude", mesh_floor->getPtrHeightAmplitude(), 0.f, 20.f);
 
@@ -531,8 +534,8 @@ void App1::gui()
 			ImGui::PushID(1);
 
 			ImGui::Text("This terrain does not have any normal map!");
-			ImGui::SliderFloat2("minMaxLOD", &mesh_terrain->getPtrMinMaxLOD()->x, 0.f, 100.f);
-			ImGui::SliderFloat2("minMaxDistance", &mesh_terrain->getPtrMinMaxDistance()->x, 0.f, 200.f);
+			ImGui::DragFloatRange2("minMaxLOD", &mesh_terrain->getPtrMinMaxLOD()->x, &mesh_terrain->getPtrMinMaxLOD()->y, .01f, 1.f, 64.f);
+			ImGui::DragFloatRange2("minMaxDistance", &mesh_terrain->getPtrMinMaxDistance()->x, &mesh_terrain->getPtrMinMaxDistance()->y, .01f, 0.f, 200.f);
 			ImGui::SliderFloat2("Texture Scale", &mesh_terrain->getPtrTextureScale()->x, .1f, 20.f);
 			ImGui::SliderFloat("Height Amplitude", mesh_terrain->getPtrHeightAmplitude(), 0.f, 20.f);
 			
@@ -550,7 +553,7 @@ void App1::gui()
 			ImGui::Checkbox("Use Normal Map", model_pillar->getPtrNormalMap());
 			ImGui::SliderFloat("Tessellation Factor Inside", &model_pillar->getPtrTessellationFactors()->x, 1.f, 64.f);
 			ImGui::SliderFloat("Tessellation Factor Outside", &model_pillar->getPtrTessellationFactors()->y, 1.f, 64.f);
-			ImGui::SliderFloat("Tessellation Height Amplitude", model_pillar->getPtrHeightAmplitude(), 0.f, 20.f);
+			if(model_pillar->hasDisplacementMap()) ImGui::SliderFloat("Tessellation Height Amplitude", model_pillar->getPtrHeightAmplitude(), 0.f, 20.f);
 
 			ImGui::PopID();
 			ImGui::TreePop();
@@ -562,7 +565,7 @@ void App1::gui()
 			ImGui::Checkbox("Use Normal Map", model_bench->getPtrNormalMap());
 			ImGui::SliderFloat("Tessellation Factor Inside", &model_bench->getPtrTessellationFactors()->x, 1.f, 64.f);
 			ImGui::SliderFloat("Tessellation Factor Outside", &model_bench->getPtrTessellationFactors()->y, 1.f, 64.f);
-			ImGui::SliderFloat("Tessellation Height Amplitude", model_bench->getPtrHeightAmplitude(), 0.f, 20.f);
+			if (model_bench->hasDisplacementMap()) ImGui::SliderFloat("Tessellation Height Amplitude", model_bench->getPtrHeightAmplitude(), 0.f, 20.f);
 
 			ImGui::PopID();
 			ImGui::TreePop();
@@ -574,7 +577,7 @@ void App1::gui()
 			ImGui::Checkbox("Use Normal Map", model_rock->getPtrNormalMap());
 			ImGui::SliderFloat("Tessellation Factor Inside", &model_rock->getPtrTessellationFactors()->x, 1.f, 64.f);
 			ImGui::SliderFloat("Tessellation Factor Outside", &model_rock->getPtrTessellationFactors()->y, 1.f, 64.f);
-			ImGui::SliderFloat("Tessellation Height Amplitude", model_rock->getPtrHeightAmplitude(), 0.f, 20.f);
+			if (model_rock->hasDisplacementMap()) ImGui::SliderFloat("Tessellation Height Amplitude", model_rock->getPtrHeightAmplitude(), 0.f, 20.f);
 
 			ImGui::PopID();
 			ImGui::TreePop();
@@ -586,7 +589,7 @@ void App1::gui()
 			ImGui::Text("This model does not have a normal map!");
 			ImGui::SliderFloat("Tessellation Factor Inside", &model_mei->getPtrTessellationFactors()->x, 1.f, 64.f);
 			ImGui::SliderFloat("Tessellation Factor Outside", &model_mei->getPtrTessellationFactors()->y, 1.f, 64.f);
-			ImGui::SliderFloat("Tessellation Height Amplitude", model_mei->getPtrHeightAmplitude(), 0.f, 20.f);
+			if (model_mei->hasDisplacementMap()) ImGui::SliderFloat("Tessellation Height Amplitude", model_mei->getPtrHeightAmplitude(), 0.f, 20.f);
 
 			ImGui::PopID();
 			ImGui::TreePop();
@@ -598,7 +601,7 @@ void App1::gui()
 			ImGui::Text("This model does not have a normal map!");
 			ImGui::SliderFloat("Tessellation Factor Inside", &model_totoro->getPtrTessellationFactors()->x, 1.f, 64.f);
 			ImGui::SliderFloat("Tessellation Factor Outside", &model_totoro->getPtrTessellationFactors()->y, 1.f, 64.f);
-			ImGui::SliderFloat("Tessellation Height Amplitude", model_totoro->getPtrHeightAmplitude(), 0.f, 20.f);
+			if (model_totoro->hasDisplacementMap()) ImGui::SliderFloat("Tessellation Height Amplitude", model_totoro->getPtrHeightAmplitude(), 0.f, 20.f);
 
 			ImGui::PopID();
 			ImGui::TreePop();
@@ -608,7 +611,7 @@ void App1::gui()
 	if (ImGui::CollapsingHeader("Bloom Settings:"))
 	{
 		ImGui::Checkbox("Enable Bloom Effect", &gui_bloom_enable);
-		ImGui::DragFloat("Threshold", &gui_bloom_threshold, 0.001f, 0.f, 10.f);
+		ImGui::DragFloat("Threshold", &gui_bloom_threshold, 0.001f, 0.f, 1.f);
 		ImGui::SliderInt("Blur Passes", &gui_bloom_blur_iterations, 1, 20);
 	}
 

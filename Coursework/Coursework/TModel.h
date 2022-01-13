@@ -10,6 +10,7 @@ public:
 	XMFLOAT2* getPtrTessellationFactors() { return &tessellation_factors_; }
 	float* getPtrHeightAmplitude() { return &height_amplitude_; }
 	bool* getPtrNormalMap() { return &use_normal_map_; }
+	bool hasDisplacementMap() { return (bool)texture_heightMap_; }
 
 	void setTextureDiffuse(ID3D11ShaderResourceView* t) { texture_diffuse_ = t; }
 	void setTextureNormalMap(ID3D11ShaderResourceView* t) { texture_normalMap_ = t; }

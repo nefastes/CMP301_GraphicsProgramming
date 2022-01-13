@@ -76,6 +76,9 @@
     <Filter Include="Resource Files\Tessellation\Grass">
       <UniqueIdentifier>{72ac0e19-0ed1-4d65-a0ea-b588ddd351d2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\Headers">
+      <UniqueIdentifier>{caf97cf2-8008-4ac2-868b-5782786e60a1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
