@@ -60,9 +60,6 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 
 	//// Load textures
 	textureMgr->loadTexture(L"heightMap", L"res/heightmap3.dds");
-	textureMgr->loadTexture(L"noHeightMap", L"res/heightmap0.jpg");
-	textureMgr->loadTexture(L"brick", L"res/brick1.dds");
-	textureMgr->loadTexture(L"wood", L"res/wood.png");
 	textureMgr->loadTexture(L"grass", L"res/grass_2.jpg");
 	textureMgr->loadTexture(L"marble_diffuse", L"res/marble_diffuse.jpg");
 	textureMgr->loadTexture(L"marble_normal", L"res/marble_normal.jpg");
